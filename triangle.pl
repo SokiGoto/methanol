@@ -18,6 +18,7 @@ my $energy;
 
 my $OH_peak;
 my $CH_peak;
+my @save_C;
 
 #my $OH_peak = 59.00;
 #my $CH_peak = 61.00;
@@ -68,20 +69,14 @@ open(OUT, ">", "theta12.dat");
 close(OUT);
 for (my $i = 0; $i < $STEP; $i++){
 	my $var = $i*$total_line;
-        my $move_x;
-        my $move_y;
-        my $move_z;
+	### move_x,y,z is coordinate of O atom in input file.
+        my ($move_x, $move_y, $move_z);
 	my $C_r;
 
-	my $C_x;
-	my $C_y;
-	my $C_z;
-	my $H_x;
-	my $H_y;
-	my $H_z;
-	my $O_x;
-	my $O_y;
-	my $O_z;
+
+	my ($C_x, $C_y, $C_z);
+	my ($H_x, $H_y, $H_z);
+	my ($O_x, $O_y, $O_z);
 
 	my $theta12;
 
@@ -159,6 +154,8 @@ for (my $i = 0; $i < $STEP; $i++){
 	                my $z_;
 	                ($r_, $theta_, $phi_) = cartesian_to_spherical($x, $y, $z);
 	                ($x_, $y_, $z_) = spherical_to_cartesian($r_/$C_r, $theta_, $phi_);
+			($save_C[$i][0], $save_C[$i][1], $save_C[$i][2]) = ($x_, $y_, $z_);
+			#print "$save_C[$i][0]  $save_C[$i][1]\n";
 	                #print $data[0]."  ".$x_."  ".$y_."  ".$z_."\n";
 	                print OUT $data[0]."  ".sprintf("%9.6f", $x_)."  ".sprintf("%9.6f", $y_).
 			"  ".sprintf("%9.6f", $z_)."\n";
@@ -311,7 +308,7 @@ for(my $i = 0; $i < $STEP; $i++){
                 my @line_split = split(/\s+/, $line);
                 $data[$i][180 + $j][1] = $line_split[1];
                 $data[$i][180 + $j][2] = $line_split[2];
-                $data[$i][180 + $j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3;
+                $data[$i][180 + $j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
 		#print "@line_split\n"
         }
         close(IN);
@@ -343,7 +340,7 @@ for (my $i = 0; $i < $STEP; $i++){
 
 
         for (my $j = 0; $j <= 2 * 180; $j++){
-                print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%7.5f", $data[$i][$j][3])."\n";
+                print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%10.8f", $data[$i][$j][3])."\n";
 		#print "".($j%(2*180)-1)."  ".($j)%(2*180)."  ".($j + 1)%(2*180)." \n";
 		#print "STEP $i  theta $j \n";
 		#print "$data[$i][$j-1][3]    $data[$i][$j][3]   $data[$i][($j + 1)%(2*180)][3] \n";
@@ -641,15 +638,15 @@ for(my $i = 0; $i < $STEP; $i++){
 	#print "finished $i\n";
 	
 	
-	($x_C, $y_C, $z_C) = ($x_C, $y_C, $z_C + 1);#p4
-	#(0, 0, 1)#p2
+	($x_C, $y_C, $z_C) = ($x_C + $save_C[$i][0], $y_C + $save_C[$i][1], $z_C + $save_C[$i][2]);#p4
+	#($save_C[$i][0], save[$i][1], save[$i][2])#p2
 	#($x_O, $y_O, $z_O)#p3
 	#(0, 0, 0)#p1
 	#print "CH_spectra   $x_C    $y_C    $z_C\n";
 	#print "OH_spectra   $x_O    $y_O    $z_O\n\n";
 
-	my $S1 = (($x_C - 0)*(0 - 1) - ($z_C - 1)*(0 - 0))/2;
-	my $S2 = (($x_C - 0)*(1 - $z_O) - ($z_C - 1)*(0 - $x_O))/2;
+	my $S1 = (($x_C - $save_C[$i][0])*(0 - $save_C[$i][2]) - ($z_C - $save_C[$i][2])*(0 - $save_C[$i][0]))/2;
+	my $S2 = (($x_C - $save_C[$i][0])*($save_C[$i][2] - $z_O) - ($z_C - $save_C[$i][2])*($save_C[$i][0] - $x_O))/2;
 	#print "$i $S1   ,$S2\n";
 	#print "$x_C, $z_C, $x_O, $z_O\n";
 	if ($S1+$S2 == 0){
@@ -670,15 +667,15 @@ for(my $i = 0; $i < $STEP; $i++){
 	print POINT "set xr[-2:2]\n";
         print POINT "set yr[-2:2]\n";
 	print POINT "pi = 3.1415 \n";
-        print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+        print POINT "unset key\n";
+	print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
 	" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
 
         print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
-	" to ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 1)." nohead linestyle 2 lc \"purple\"\n";
+	" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2])." nohead linestyle 2 lc \"purple\"\n";
 
-        print POINT "set arrow 3 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 1).
+        print POINT "set arrow 3 from ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
 	" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
-        print POINT "unset key\n";
         print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
 		", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
 
@@ -694,7 +691,7 @@ for(my $i = 0; $i < $STEP; $i++){
 	
 
 	
-        print POINT "plot file_C u ((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180*pi)):(((\$3/$scale_C) * cos((\$1/180)*pi)) + 1) w l\n";
+        print POINT "plot file_C u (((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180*pi)) + $save_C[$i][0]):(((\$3/$scale_C) * cos((\$1/180)*pi)) + $save_C[$i][2]) w l\n";
         print POINT "plot file_O u ((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):(((\$3/$scale_O) * cos((\$1/180)*pi))) w l\n";
 	#print POINT "reset\n";
 	print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
@@ -707,6 +704,7 @@ for(my $i = 0; $i < $STEP; $i++){
 
 }
 if ($output == 3){
+	system("rm -rf ./output/spectra_triangle.mp4");
 	my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
 	system($command_PNGtoGIF);
 	print "Finished png to gif.\n";
