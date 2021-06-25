@@ -762,8 +762,8 @@ sub brode_triangle {
 	#my $CH_peak_r = $data[0][$force_peak_C[0][0]][3];
 
 
-	#my $peak_wide_C = 51;
-	#my $peak_wide_O = 30;
+	my $peak_wide_C = 51;
+	my $peak_wide_O = 30;
 	
 	for(my $i = 0; $i < $STEP; $i++){
 	        my ($x_C, $y_C, $z_C);
