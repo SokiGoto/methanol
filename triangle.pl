@@ -762,8 +762,8 @@ sub brode_triangle {
 	#my $CH_peak_r = $data[0][$force_peak_C[0][0]][3];
 
 
-	my $peak_wide_C = 51;
-	my $peak_wide_O = 30;
+	#my $peak_wide_C = 51;
+	#my $peak_wide_O = 30;
 	
 	for(my $i = 0; $i < $STEP; $i++){
 	        my ($x_C, $y_C, $z_C);
@@ -780,8 +780,8 @@ sub brode_triangle {
 			if ($peak_C[$i][$j][2] == 180){
 	                        $theta_C = -$peak_C[$i][$j][1];
 	                }
-			#if ($theta_C > $CH_peak_theta - $peak_wide and $theta_C < $CH_peak_theta + $peak_wide){
-			if ($theta_C > $CH_peak_theta - $peak_wide_C and $theta_C < $CH_peak_theta + $peak_wide_C){
+			if ($theta_C > $CH_peak_theta - $peak_wide and $theta_C < $CH_peak_theta + $peak_wide){
+			#if ($theta_C > $CH_peak_theta - $peak_wide_C and $theta_C < $CH_peak_theta + $peak_wide_C){
 				if ($peak_C[$i][$j][3] > $CH_peak_r){
 					$theta_keep_C = $theta_C;
 					$CH_peak_r = $peak_C[$i][$j][3];
@@ -807,8 +807,8 @@ sub brode_triangle {
 	                if ($peak_O[$i][$j][2] == 180){
 	                        $theta_O = -$peak_O[$i][$j][1];
 	                }
-			#if ($theta_O > $OH_peak_theta - $peak_wide and $theta_O < $OH_peak_theta + $peak_wide){
-	                if ($theta_O > $OH_peak_theta - $peak_wide_O and $theta_O < $OH_peak_theta + $peak_wide_O){
+			if ($theta_O > $OH_peak_theta - $peak_wide and $theta_O < $OH_peak_theta + $peak_wide){
+			#if ($theta_O > $OH_peak_theta - $peak_wide_O and $theta_O < $OH_peak_theta + $peak_wide_O){
 	                        if ($peak_O[$i][$j][3] > $OH_peak_r){
 	                                $theta_keep_O = $theta_O;
 	                                $OH_peak_r = $peak_O[$i][$j][3];
