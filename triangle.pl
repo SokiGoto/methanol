@@ -14,6 +14,7 @@ my $input_file;
 #my $energy = 100;
 
 my $energy;
+my $peak_wide;
 
 
 my $OH_peak;
@@ -262,15 +263,15 @@ if ($output == 2){
 #if (-d "C_test"){rmtree("C_test")};mkdir("C_test");
 #for (my $i = 0; $i < $STEP; $i++){
 #	open(OUT_C, ">", "C_test/STEP$i.dat") or die $!;
-#	open(OUT_PEAK, ">", "C_test/STEP$i\_PAEK.dat") or die $!;
+#	open(OUT_PEAK, ">", "C_test/STEP$i\_PEAK.dat") or die $!;
 #	for (my $j; $j < $data_j; $j++){
 #		print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%7.5f", $data[$i][$j][3])."\n";
 #		print "  ".($j + 1)%($STEP)." \n";
 #		if ($data[$i][$j-1][3] < $data[$i][$j][3] && $data[$i][($j + 1)%($STEP)][3] < $data[$i][$j][3]){
-#			$paek[$i][$j][1] = $data[$i][$j][1];
-#			$paek[$i][$j][2] = $data[$i][$j][2];
-#			$paek[$i][$j][3] = $data[$i][$j][3];
-#			print OUT_PEAK sprintf("%6.2f", $paek[$i][$j][1])."  ".sprintf("%6.2f", $paek[$i][$j][2])."  ".sprintf("%7.5f", $paek[$i][$j][3])."\n";
+#			$peak[$i][$j][1] = $data[$i][$j][1];
+#			$peak[$i][$j][2] = $data[$i][$j][2];
+#			$peak[$i][$j][3] = $data[$i][$j][3];
+#			print OUT_PEAK sprintf("%6.2f", $peak[$i][$j][1])."  ".sprintf("%6.2f", $peak[$i][$j][2])."  ".sprintf("%7.5f", $peak[$i][$j][3])."\n";
 #		}
 #
 #	}
@@ -281,7 +282,7 @@ if ($output == 2){
 
 my $data_j;
 my @data;
-my @paek_C;
+my @peak_C;
 for(my $i = 0; $i < $STEP; $i++){
         open(IN, "<", "../C_".$energy."eV/plot-data/STEP$i.dat")or die $!;
         my @lines = <IN>;
@@ -319,12 +320,13 @@ if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
 if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 for (my $i = 0; $i < $STEP; $i++){
         open(OUT_C, ">", "C_test/STEP$i.dat") or die $!;
-        open(OUT_PEAK, ">", "C_test/STEP$i\_PAEK.dat") or die $!;
+        open(OUT_PEAK, ">", "C_test/STEP$i\_PEAK.dat") or die $!;
+	open(OUT_VALLEY, ">", "C_test/STEP$i\_VALLEY.dat") or die $!;
 
 	### make .plt ###
 	open(PLT, ">", "point_plt/C/STEP$i.plt") or die $!;
-	print PLT "set terminal pdfcairo\n";
-	print PLT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
+	#print PLT "set terminal pdfcairo\n";
+	#print PLT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
 	print PLT "file = \"C_test/STEP$i.dat\"\n";
 	print PLT "set title \"STEP$i\"\n";
 	print PLT "set polar\n";
@@ -345,23 +347,27 @@ for (my $i = 0; $i < $STEP; $i++){
 		#print "STEP $i  theta $j \n";
 		#print "$data[$i][$j-1][3]    $data[$i][$j][3]   $data[$i][($j + 1)%(2*180)][3] \n";
                 if ($data[$i][$j-1][3] < $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] < $data[$i][$j][3]){
-                        $paek_C[$i][$j][1] = $data[$i][$j][1];
-                        $paek_C[$i][$j][2] = $data[$i][$j][2];
-                        $paek_C[$i][$j][3] = $data[$i][$j][3];
-                        print OUT_PEAK sprintf("%6.2f", $paek_C[$i][$j][1])."  ".sprintf("%6.2f", $paek_C[$i][$j][2])."  ".sprintf("%7.5f", $paek_C[$i][$j][3])."\n";
+                        $peak_C[$i][$j][1] = $data[$i][$j][1];
+                        $peak_C[$i][$j][2] = $data[$i][$j][2];
+                        $peak_C[$i][$j][3] = $data[$i][$j][3];
+                        print OUT_PEAK sprintf("%6.2f", $peak_C[$i][$j][1])."  ".sprintf("%6.2f", $peak_C[$i][$j][2])."  ".sprintf("%9.6f", $peak_C[$i][$j][3])."\n";
 
 
 			### make .plt ###
-			my ($x, $y, $z) = spherical_to_cartesian($paek_C[$i][$j][3], $paek_C[$i][$j][1], $paek_C[$i][$j][2]);
-			#print PLT "set arrow from 0,0 to ".($paek[$i][$j][1]).",".($paek[$i][$j][3])." nohead \n";
+			my ($x, $y, $z) = spherical_to_cartesian($peak_C[$i][$j][3], $peak_C[$i][$j][1], $peak_C[$i][$j][2]);
+			#print PLT "set arrow from 0,0 to ".($peak[$i][$j][1]).",".($peak[$i][$j][3])." nohead \n";
 			### end .plt #####
+                }
+		if ($data[$i][$j-1][3] > $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] > $data[$i][$j][3]){
+                        print OUT_VALLEY sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
                 }
 
         }
 	print PLT "plot file u (\$2!=180  ? - \$1+90 : \$1+90):3 w l ,\\\n";
-	print PLT " \"C_test/STEP$i\_PAEK.dat\" u (\$2!=180  ? - \$1+90 : \$1+90):3 with impulses\n";
+	print PLT " \"C_test/STEP$i\_PEAK.dat\" u (\$2!=180  ? - \$1+90 : \$1+90):3 with impulses,\\\n";
+	print PLT " \"C_test/STEP$i\_VALLEY.dat\" u (\$2!=180  ? - \$1+90 : \$1+90):3 with impulses\n";
 	#print "STEP = $i\n";
-	#print "scalar".scalar(@{$paek[$i]})."\n";
+	#print "scalar".scalar(@{$peak[$i]})."\n";
         close(OUT_C);
         close(OUT_PEAK);
 	close(PLT);
@@ -394,7 +400,7 @@ if ($output == 1){
 
 my $data_j;
 my @data;
-my @paek_O;
+my @peak_O;
 #=============== O =============
 for(my $i = 0; $i < $STEP; $i++){
         open(IN, "<", "../".$energy."eV/plot-data/STEP$i.dat")or die $!;
@@ -435,12 +441,13 @@ if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 
 for (my $i = 0; $i < $STEP; $i++){
         open(OUT_C, ">", "O_test/STEP$i.dat") or die $!;
-        open(OUT_PEAK, ">", "O_test/STEP$i\_PAEK.dat") or die $!;
+        open(OUT_PEAK, ">", "O_test/STEP$i\_PEAK.dat") or die $!;
+	open(OUT_VALLEY, ">", "O_test/STEP$i\_VALLEY.dat") or die $!;
 
 	### make .plt ###
 	open(PLT, ">", "point_plt/O/STEP$i.plt") or die $!;
-	print PLT "set terminal pdfcairo\n";
-	print PLT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
+	#	print PLT "set terminal pdfcairo\n";
+	#	print PLT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
 	print PLT "file = \"O_test/STEP$i.dat\"\n";
 	print PLT "set title \"STEP$i\"\n";
 	print PLT "set polar\n";
@@ -450,31 +457,36 @@ for (my $i = 0; $i < $STEP; $i++){
 	print PLT "set size square\n";
 	print PLT "unset key\n";
 	print PLT "\n";
-	### end .plt ###
 
 
         for (my $j = 0; $j <= 2 * 180; $j++){
-                print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%7.5f", $data[$i][$j][3])."\n";
+                print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
                 if ($data[$i][$j-1][3] < $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] < $data[$i][$j][3]){
-                        $paek_O[$i][$j][1] = $data[$i][$j][1];
-                        $paek_O[$i][$j][2] = $data[$i][$j][2];
-                        $paek_O[$i][$j][3] = $data[$i][$j][3];
-                        print OUT_PEAK sprintf("%6.2f", $paek_O[$i][$j][1])."  ".sprintf("%6.2f", $paek_O[$i][$j][2])."  ".sprintf("%7.5f", $paek_O[$i][$j][3])."\n";
+                        $peak_O[$i][$j][1] = $data[$i][$j][1];
+                        $peak_O[$i][$j][2] = $data[$i][$j][2];
+                        $peak_O[$i][$j][3] = $data[$i][$j][3];
+                        print OUT_PEAK sprintf("%6.2f", $peak_O[$i][$j][1])."  ".sprintf("%6.2f", $peak_O[$i][$j][2])."  ".sprintf("%9.6f", $peak_O[$i][$j][3])."\n";
 
 
 			### make .plt ###
-			my ($x, $y, $z) = spherical_to_cartesian($paek_O[$i][$j][3], $paek_O[$i][$j][1], $paek_O[$i][$j][2]);
-			#print PLT "set arrow from 0,0 to ".($paek[$i][$j][1]).",".($paek[$i][$j][3])." nohead \n";
+			my ($x, $y, $z) = spherical_to_cartesian($peak_O[$i][$j][3], $peak_O[$i][$j][1], $peak_O[$i][$j][2]);
+			#print PLT "set arrow from 0,0 to ".($peak[$i][$j][1]).",".($peak[$i][$j][3])." nohead \n";
 			### end .plt #####
                 }
+		if ($data[$i][$j-1][3] > $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] > $data[$i][$j][3]){
+                        print OUT_VALLEY sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
+		}
 
         }
 	print PLT "pi = 3.1415 \n";
 	#print PLT "plot file u (\$3 * sin((\$1/180) * pi) * cos(\$2/180*pi)):((\$3 * cos((\$1/180)*pi))+1) w l\\\n";
 	print PLT "plot file u (\$2!=180  ? - \$1+90 : \$1+90):3 w l ,\\\n";
-	print PLT " \"O_test/STEP$i\_PAEK.dat\" u (\$2!=180  ? - \$1+90 : \$1+90):3 with impulses\n";
+	print PLT " \"O_test/STEP$i\_PEAK.dat\" u (\$2!=180  ? - \$1+90 : \$1+90):3 with impulses ,\\\n";
+	print PLT " \"O_test/STEP$i\_VALLEY.dat\" u (\$2!=180  ? - \$1+90 : \$1+90):3 with impulses\n";
+	### end .plt ###
+	
 	#print "STEP = $i\n";
-	#print "scalar".scalar(@{$paek[$i]})."\n";
+	#print "scalar".scalar(@{$peak[$i]})."\n";
         close(OUT_C);
         close(OUT_PEAK);
 	close(PLT);
@@ -512,10 +524,10 @@ if($output == 1){
 #	print PLT "set polar\n";
 #	print PLT "set angles degree\n";
 #	print PLT "\n";
-#	my $tmp = scalar(@{$paek[$i]});
+#	my $tmp = scalar(@{$peak[$i]});
 #	for (my $j = 1; $j <= $tmp; $j++){
 #		my ($x,$y,$z);
-#                ($x, $y, $z) = spherical_to_cartesian($paek[$i][$j][3], $paek[$i][$j][1], $paek[$i][$j][2]);
+#                ($x, $y, $z) = spherical_to_cartesian($peak[$i][$j][3], $peak[$i][$j][1], $peak[$i][$j][2]);
 #		print PLT "set arrow from 0,0 to ".($x).",".($z)." nohead \n";
 #	}
 #	print PLT "plot file u (\$2!=180  ? - \$1+90 : \$1+90):3 w l"
@@ -529,195 +541,384 @@ if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 
 open(OUT, ">", "theta12_spectra.dat");
 close(OUT);
-open(IN, "<", "input_triangle_O.dat") or die $!;
-my @force_peak_O;
-my @force_peak_O_in = <IN>;
-print "O force peak\n";
-for(my $i = 0; $i <= $#force_peak_O_in; $i++){
-	chomp($force_peak_O_in[$i]);
-	my @line_split = split(/\s+/, $force_peak_O_in[$i]);
-	$force_peak_O[$i][0] = $line_split[0];
-	$force_peak_O[$i][1] = $line_split[1];
-	print "$force_peak_O[$i][0]   $force_peak_O[$i][1]\n";
-}
-open(IN, "<", "input_triangle_C.dat") or die $!;
-my @force_peak_C;
-my @force_peak_C_in = <IN>;
-print "C force peak\n";
-for(my $i = 0; $i <= $#force_peak_C_in; $i++){
-	chomp($force_peak_C_in[$i]);
-	my @line_split = split(/\s+/, $force_peak_C_in[$i]);
-	$force_peak_C[$i][0] = $line_split[0];
-	$force_peak_C[$i][1] = $line_split[1];
-	print "$force_peak_C[$i][0]   $force_peak_C[$i][1]\n";
-}
 
-my $count_C = 0;
-my $count_O = 0;
+&brode_triangle();
 
-for(my $i = 0; $i < $STEP; $i++){
-	#open(IN_PEAK_C, ">", "C_test/STEP$i\_PAEK.dat") or die $!;
-        #open(IN_PEAK_O, ">", "O_test/STEP$i\_PAEK.dat") or die $!;
-	#my @O_lines = <IN_PEAK_O>;
-	#my $O_lines_len = $O_lines;
-	#my @C_lines = <IN_PEAK_C>;
-	#my $C_lines_len = $C_lines;
-
-	#for(my $j = 0; $j < $O_lines_len; $j ++){
-        my ($x_C, $y_C, $z_C);
-        my ($x_O, $y_O, $z_O);
-
-
-	my $tmp = scalar(@{$paek_C[$i]});
-	my $theta_C;
-	my $delta = 360;
-	my $theta_keep;
-	if ($force_peak_C[$count_C][0] == $i){
-		$CH_peak = $force_peak_C[$count_C][1];
-		#print "C $force_peak_C[$count_C][1] \n";
-		$count_C += 1
+sub triangle{
+	open(IN, "<", "input_triangle_O.dat") or die $!;
+	my @force_peak_O;
+	my @force_peak_O_in = <IN>;
+	print "O force peak\n";
+	for(my $i = 0; $i <= $#force_peak_O_in; $i++){
+		chomp($force_peak_O_in[$i]);
+		my @line_split = split(/\s+/, $force_peak_O_in[$i]);
+		$force_peak_O[$i][0] = $line_split[0];
+		$force_peak_O[$i][1] = $line_split[1];
+		print "$force_peak_O[$i][0]   $force_peak_O[$i][1]\n";
 	}
-	for (my $j = 1; $j <= $tmp; $j++){
-		$theta_C = $paek_C[$i][$j][1];
-		if ($paek_C[$i][$j][2] == 180){
-			$theta_C = -$paek_C[$i][$j][1];
+	open(IN, "<", "input_triangle_C.dat") or die $!;
+	my @force_peak_C;
+	my @force_peak_C_in = <IN>;
+	print "C force peak\n";
+	for(my $i = 0; $i <= $#force_peak_C_in; $i++){
+		chomp($force_peak_C_in[$i]);
+		my @line_split = split(/\s+/, $force_peak_C_in[$i]);
+		$force_peak_C[$i][0] = $line_split[0];
+		$force_peak_C[$i][1] = $line_split[1];
+		print "$force_peak_C[$i][0]   $force_peak_C[$i][1]\n";
+	}
+	
+	my $count_C = 0;
+	my $count_O = 0;
+	
+	for(my $i = 0; $i < $STEP; $i++){
+		#open(IN_PEAK_C, ">", "C_test/STEP$i\_PEAK.dat") or die $!;
+	        #open(IN_PEAK_O, ">", "O_test/STEP$i\_PEAK.dat") or die $!;
+		#my @O_lines = <IN_PEAK_O>;
+		#my $O_lines_len = $O_lines;
+		#my @C_lines = <IN_PEAK_C>;
+		#my $C_lines_len = $C_lines;
+	
+		#for(my $j = 0; $j < $O_lines_len; $j ++){
+	        my ($x_C, $y_C, $z_C);
+	        my ($x_O, $y_O, $z_O);
+	
+	
+		my $tmp = scalar(@{$peak_C[$i]});
+		my $theta_C;
+		my $delta = 360;
+		my $theta_keep;
+		if ($force_peak_C[$count_C][0] == $i){
+			$CH_peak = $force_peak_C[$count_C][1];
+			#print "C $force_peak_C[$count_C][1] \n";
+			$count_C += 1
 		}
-		if ($delta > abs($CH_peak - $theta_C)){
-			#print "j = $j : $theta_C $CH_peak\n";
-			$theta_keep = $theta_C;
-			$delta = abs($CH_peak - $theta_C);
-			#print "$delta\n";
-                	($x_C, $y_C, $z_C) = spherical_to_cartesian(1,
-			       	deg2rad($paek_C[$i][$j][2]), deg2rad($paek_C[$i][$j][1]));
+		for (my $j = 1; $j <= $tmp; $j++){
+			$theta_C = $peak_C[$i][$j][1];
+			if ($peak_C[$i][$j][2] == 180){
+				$theta_C = -$peak_C[$i][$j][1];
+			}
+			if ($delta > abs($CH_peak - $theta_C)){
+				#print "j = $j : $theta_C $CH_peak\n";
+				$theta_keep = $theta_C;
+				$delta = abs($CH_peak - $theta_C);
+				#print "$delta\n";
+	                	($x_C, $y_C, $z_C) = spherical_to_cartesian(1,
+				       	deg2rad($peak_C[$i][$j][2]), deg2rad($peak_C[$i][$j][1]));
+			}
 		}
-	}
-	$CH_peak = $theta_keep;
-	print "STEP$i C $CH_peak\n";
-
-	my $tmp = scalar(@{$paek_O[$i]});
-	my $theta_O;
-	my $delta = 360;
-	my $theta_keep;
-	if ($force_peak_O[$count_O][0] == $i){
-		$OH_peak = $force_peak_O[$count_O][1];
-		#print "O $force_peak_O[$count_O][1] \n";
-		$count_O += 1
-	}
-	for (my $j = 1; $j <= $tmp; $j++){
-		$theta_O = $paek_O[$i][$j][1];
-		if ($paek_O[$i][$j][2] == 180){
-			$theta_O = -$paek_O[$i][$j][1];
+		$CH_peak = $theta_keep;
+		print "STEP$i C $CH_peak\n";
+	
+		my $tmp = scalar(@{$peak_O[$i]});
+		my $theta_O;
+		my $delta = 360;
+		my $theta_keep;
+		if ($force_peak_O[$count_O][0] == $i){
+			$OH_peak = $force_peak_O[$count_O][1];
+			#print "O $force_peak_O[$count_O][1] \n";
+			$count_O += 1
 		}
-		if ($delta > abs($OH_peak - $theta_O)){
-			#print "j = $j : $theta_O $OH_peak\n";
-			$theta_keep = $theta_O;
-			$delta = abs($OH_peak - $theta_O);
-                	($x_O, $y_O, $z_O) = spherical_to_cartesian(1,
-			       	deg2rad($paek_O[$i][$j][2]), deg2rad($paek_O[$i][$j][1]));
+		for (my $j = 1; $j <= $tmp; $j++){
+			$theta_O = $peak_O[$i][$j][1];
+			if ($peak_O[$i][$j][2] == 180){
+				$theta_O = -$peak_O[$i][$j][1];
+			}
+			if ($delta > abs($OH_peak - $theta_O)){
+				#print "j = $j : $theta_O $OH_peak\n";
+				$theta_keep = $theta_O;
+				$delta = abs($OH_peak - $theta_O);
+	                	($x_O, $y_O, $z_O) = spherical_to_cartesian(1,
+				       	deg2rad($peak_O[$i][$j][2]), deg2rad($peak_O[$i][$j][1]));
+			}
 		}
+		$OH_peak = $theta_keep;
+		print "STEP$i O $OH_peak\n";
+		#print "$OH_peak\n";
+	
+		
+		#print "x_C = $x_C : y_C = $y_C : z_C = $z_C \n";
+		#print "x_O = $x_O : y_O = $y_O : z_O = $z_O \n";
+	
+		open(OUT, ">>", "theta12_spectra.dat");
+	
+		my $HO_r = sqrt($x_O*$x_O + $y_O*$y_O + $z_O*$z_O);
+		my $HC_r = sqrt($x_C*$x_C + $y_C*$y_C + $z_C*$z_C);
+		my $HOHC = $x_O*$x_C + $y_O*$y_C + $z_O*$z_C;
+	
+		my $theta12_ = rad2deg(acos(($HOHC)/($HO_r*$HC_r)));
+		print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", $theta12_)."\n";
+		#
+		#print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", abs($OH_peak-$CH_peak))."\n";
+		close(OUT);
+		#print "finished $i\n";
+		
+		
+		($x_C, $y_C, $z_C) = ($x_C + $save_C[$i][0], $y_C + $save_C[$i][1], $z_C + $save_C[$i][2]);#p4
+		#($save_C[$i][0], save[$i][1], save[$i][2])#p2
+		#($x_O, $y_O, $z_O)#p3
+		#(0, 0, 0)#p1
+		#print "CH_spectra   $x_C    $y_C    $z_C\n";
+		#print "OH_spectra   $x_O    $y_O    $z_O\n\n";
+	
+		my $S1 = (($x_C - $save_C[$i][0])*(0 - $save_C[$i][2]) - ($z_C - $save_C[$i][2])*(0 - $save_C[$i][0]))/2;
+		my $S2 = (($x_C - $save_C[$i][0])*($save_C[$i][2] - $z_O) - ($z_C - $save_C[$i][2])*($save_C[$i][0] - $x_O))/2;
+		#print "$i $S1   ,$S2\n";
+		#print "$x_C, $z_C, $x_O, $z_O\n";
+		if ($S1+$S2 == 0){
+			print "OH and CH are parallel in STEP$i.\n";
+			exit;
+		}
+		my $intersection_x = 0 + ($x_O - 0) * $S1 / ($S1 + $S2);
+		my $intersection_y = 0 + ($z_O - 0) * $S1 / ($S1 + $S2);
+		my $file = "point_plt/spectra_triangle/point".sprintf("%03d", $i).".plt";
+	        open(POINT, ">", $file);
+		print POINT "file_O = \"O_test/STEP$i.dat\"\n";
+		print POINT "file_C = \"C_test/STEP$i.dat\"\n";
+		print POINT "set title \"STEP-$i\"\n";
+		print POINT "set terminal pdfcairo\n";
+		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
+	        print POINT "\n";
+		print POINT "set size square\n";
+		print POINT "set xr[-2:2]\n";
+	        print POINT "set yr[-2:2]\n";
+		print POINT "pi = 3.1415 \n";
+	        print POINT "unset key\n";
+		print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+		" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
+	
+	        print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+		" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2])." nohead linestyle 2 lc \"purple\"\n";
+	
+	        print POINT "set arrow 3 from ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
+		" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
+	        print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
+			", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
+	
+		
+			#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_O).
+			#	", ".sprintf("%9.6f", $z_O).") pt 7\n";
+	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_C).
+			#	", ".sprintf("%9.6f", $z_C).") pt 7 lc \"green\"\n";
+	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
+			#	", ".sprintf("%9.6f", 1).") pt 7 lc \"green\"\n";
+	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
+			#	", ".sprintf("%9.6f", 0).") pt 7\n";
+		
+	
+		
+	        print POINT "plot file_C u (((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180*pi)) + $save_C[$i][0]):(((\$3/$scale_C) * cos((\$1/180)*pi)) + $save_C[$i][2]) w l\n";
+	        print POINT "plot file_O u ((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):(((\$3/$scale_O) * cos((\$1/180)*pi))) w l\n";
+		#print POINT "reset\n";
+		print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
+	        close(POINT);
+	        if ($output == 3){
+	                system("gnuplot $file");
+	                system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
+		}
+	
+	
 	}
-	$OH_peak = $theta_keep;
-	print "STEP$i O $OH_peak\n";
-	#print "$OH_peak\n";
-
-	
-	#print "x_C = $x_C : y_C = $y_C : z_C = $z_C \n";
-	#print "x_O = $x_O : y_O = $y_O : z_O = $z_O \n";
-
-	open(OUT, ">>", "theta12_spectra.dat");
-
-	my $HO_r = sqrt($x_O*$x_O + $y_O*$y_O + $z_O*$z_O);
-	my $HC_r = sqrt($x_C*$x_C + $y_C*$y_C + $z_C*$z_C);
-	my $HOHC = $x_O*$x_C + $y_O*$y_C + $z_O*$z_C;
-
-	my $theta12_ = rad2deg(acos(($HOHC)/($HO_r*$HC_r)));
-	print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", $theta12_)."\n";
-	#
-	#print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", abs($OH_peak-$CH_peak))."\n";
-	close(OUT);
-	#print "finished $i\n";
-	
-	
-	($x_C, $y_C, $z_C) = ($x_C + $save_C[$i][0], $y_C + $save_C[$i][1], $z_C + $save_C[$i][2]);#p4
-	#($save_C[$i][0], save[$i][1], save[$i][2])#p2
-	#($x_O, $y_O, $z_O)#p3
-	#(0, 0, 0)#p1
-	#print "CH_spectra   $x_C    $y_C    $z_C\n";
-	#print "OH_spectra   $x_O    $y_O    $z_O\n\n";
-
-	my $S1 = (($x_C - $save_C[$i][0])*(0 - $save_C[$i][2]) - ($z_C - $save_C[$i][2])*(0 - $save_C[$i][0]))/2;
-	my $S2 = (($x_C - $save_C[$i][0])*($save_C[$i][2] - $z_O) - ($z_C - $save_C[$i][2])*($save_C[$i][0] - $x_O))/2;
-	#print "$i $S1   ,$S2\n";
-	#print "$x_C, $z_C, $x_O, $z_O\n";
-	if ($S1+$S2 == 0){
-		print "OH and CH are parallel in STEP$i.\n";
-		exit;
+	if ($output == 3){
+		system("rm -rf ./output/spectra_triangle.mp4");
+		my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+		system($command_PNGtoGIF);
+		print "Finished png to gif.\n";
+		my $command_GIFtoMP4 = "ffmpeg -r 3 -i ./output/output_point.gif".
+	                        "  -movflags faststart -pix_fmt yuv420p -vf ".
+	                        "\"scale=trunc(iw/2)*2:trunc(ih/2)*2\" ./output/spectra_triangle.mp4";
+		system($command_GIFtoMP4);
+		print "Finished gif to mp4.\n";
 	}
-	my $intersection_x = 0 + ($x_O - 0) * $S1 / ($S1 + $S2);
-	my $intersection_y = 0 + ($z_O - 0) * $S1 / ($S1 + $S2);
-	my $file = "point_plt/spectra_triangle/point".sprintf("%03d", $i).".plt";
-        open(POINT, ">", $file);
-	print POINT "file_O = \"O_test/STEP$i.dat\"\n";
-	print POINT "file_C = \"C_test/STEP$i.dat\"\n";
-	print POINT "set title \"STEP-$i\"\n";
-	print POINT "set terminal pdfcairo\n";
-	print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
-        print POINT "\n";
-	print POINT "set size square\n";
-	print POINT "set xr[-2:2]\n";
-        print POINT "set yr[-2:2]\n";
-	print POINT "pi = 3.1415 \n";
-        print POINT "unset key\n";
-	print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
-	" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
-
-        print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
-	" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2])." nohead linestyle 2 lc \"purple\"\n";
-
-        print POINT "set arrow 3 from ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
-	" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
-        print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
-		", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
-
-	
-		#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_O).
-		#	", ".sprintf("%9.6f", $z_O).") pt 7\n";
-        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_C).
-		#	", ".sprintf("%9.6f", $z_C).") pt 7 lc \"green\"\n";
-        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
-		#	", ".sprintf("%9.6f", 1).") pt 7 lc \"green\"\n";
-        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
-		#	", ".sprintf("%9.6f", 0).") pt 7\n";
-	
-
-	
-        print POINT "plot file_C u (((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180*pi)) + $save_C[$i][0]):(((\$3/$scale_C) * cos((\$1/180)*pi)) + $save_C[$i][2]) w l\n";
-        print POINT "plot file_O u ((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):(((\$3/$scale_O) * cos((\$1/180)*pi))) w l\n";
-	#print POINT "reset\n";
-	print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
-        close(POINT);
-        if ($output == 3){
-                system("gnuplot $file");
-                system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
-	}
-
-
 }
-if ($output == 3){
-	system("rm -rf ./output/spectra_triangle.mp4");
-	my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
-	system($command_PNGtoGIF);
-	print "Finished png to gif.\n";
-	my $command_GIFtoMP4 = "ffmpeg -r 3 -i ./output/output_point.gif".
-                        "  -movflags faststart -pix_fmt yuv420p -vf ".
-                        "\"scale=trunc(iw/2)*2:trunc(ih/2)*2\" ./output/spectra_triangle.mp4";
-	system($command_GIFtoMP4);
-	print "Finished gif to mp4.\n";
+
+
+sub brode_triangle {
+	open(IN, "<", "input_triangle_O.dat") or die $!;
+	my @force_peak_O;
+	my @force_peak_O_in = <IN>;
+	print "O force peak\n";
+	for(my $i = 0; $i <= $#force_peak_O_in; $i++){
+		chomp($force_peak_O_in[$i]);
+		my @line_split = split(/\s+/, $force_peak_O_in[$i]);
+		$force_peak_O[$i][0] = $line_split[0];
+		$force_peak_O[$i][1] = $line_split[1];
+		print "$force_peak_O[$i][0]   $force_peak_O[$i][1]\n";
+	}
+	my $OH_peak_theta = $force_peak_O[0][1];
+	#my $OH_peak_r = $data[0][$force_peak_O[0][0]][3];
+	open(IN, "<", "input_triangle_C.dat") or die $!;
+	my @force_peak_C;
+	my @force_peak_C_in = <IN>;
+	print "C force peak\n";
+	for(my $i = 0; $i <= $#force_peak_C_in; $i++){
+		chomp($force_peak_C_in[$i]);
+		my @line_split = split(/\s+/, $force_peak_C_in[$i]);
+		$force_peak_C[$i][0] = $line_split[0];
+		$force_peak_C[$i][1] = $line_split[1];
+		print "$force_peak_C[$i][0]   $force_peak_C[$i][1]\n";
+	}
+	my $CH_peak_theta = $force_peak_C[0][1];
+	#my $CH_peak_r = $data[0][$force_peak_C[0][0]][3];
+
+
+	my $peak_wide_C = 51;
+	my $peak_wide_O = 30;
+	
+	for(my $i = 0; $i < $STEP; $i++){
+	        my ($x_C, $y_C, $z_C);
+	        my ($x_O, $y_O, $z_O);
+		my $CH_peak_r = 0;
+		my $OH_peak_r = 0;
+	
+	
+		my $peak_C_jlen = scalar(@{$peak_C[$i]});
+		my $theta_C;
+		my $theta_keep_C;
+		for (my $j = 1; $j <= $peak_C_jlen; $j++){
+			$theta_C = $peak_C[$i][$j][1];
+			if ($peak_C[$i][$j][2] == 180){
+	                        $theta_C = -$peak_C[$i][$j][1];
+	                }
+			#if ($theta_C > $CH_peak_theta - $peak_wide and $theta_C < $CH_peak_theta + $peak_wide){
+			if ($theta_C > $CH_peak_theta - $peak_wide_C and $theta_C < $CH_peak_theta + $peak_wide_C){
+				if ($peak_C[$i][$j][3] > $CH_peak_r){
+					$theta_keep_C = $theta_C;
+					$CH_peak_r = $peak_C[$i][$j][3];
+					($x_C, $y_C, $z_C) = spherical_to_cartesian(1,
+		                                deg2rad($peak_C[$i][$j][2]), deg2rad($peak_C[$i][$j][1]));
+				}
+			}
+		}
+		if ($theta_keep_C == ""){
+			print "not found STEP $i C peak";
+			exit;
+		}
+		$CH_peak_theta = $theta_keep_C;
+		print "STEP$i C $CH_peak_theta\n";
+	
+	
+	
+		my $peak_O_jlen = scalar(@{$peak_O[$i]});
+	        my $theta_O;
+		my $theta_keep_O;
+	        for (my $j = 1; $j <= $peak_O_jlen; $j++){
+	                $theta_O = $peak_O[$i][$j][1];
+	                if ($peak_O[$i][$j][2] == 180){
+	                        $theta_O = -$peak_O[$i][$j][1];
+	                }
+			#if ($theta_O > $OH_peak_theta - $peak_wide and $theta_O < $OH_peak_theta + $peak_wide){
+	                if ($theta_O > $OH_peak_theta - $peak_wide_O and $theta_O < $OH_peak_theta + $peak_wide_O){
+	                        if ($peak_O[$i][$j][3] > $OH_peak_r){
+	                                $theta_keep_O = $theta_O;
+	                                $OH_peak_r = $peak_O[$i][$j][3];
+	                                ($x_O, $y_O, $z_O) = spherical_to_cartesian(1,
+	                                        deg2rad($peak_O[$i][$j][2]), deg2rad($peak_O[$i][$j][1]));
+	                        }
+	                }
+	        }
+		if ($theta_keep_O == ""){
+			print "not found STEP $i O peak";
+			exit;
+		}
+	        $OH_peak_theta = $theta_keep_O;
+	        print "STEP$i O $OH_peak_theta\n";
+	
+		
+		#print "x_C = $x_C : y_C = $y_C : z_C = $z_C \n";
+		#print "x_O = $x_O : y_O = $y_O : z_O = $z_O \n";
+	
+		open(OUT, ">>", "theta12_spectra.dat");
+	
+		my $HO_r = sqrt($x_O*$x_O + $y_O*$y_O + $z_O*$z_O);
+		my $HC_r = sqrt($x_C*$x_C + $y_C*$y_C + $z_C*$z_C);
+		my $HOHC = $x_O*$x_C + $y_O*$y_C + $z_O*$z_C;
+	
+		my $theta12_ = rad2deg(acos(($HOHC)/($HO_r*$HC_r)));
+		print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", $theta12_)."\n";
+		#
+		#print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", abs($OH_peak-$CH_peak))."\n";
+		close(OUT);
+		#print "finished $i\n";
+		
+		
+		($x_C, $y_C, $z_C) = ($x_C + $save_C[$i][0], $y_C + $save_C[$i][1], $z_C + $save_C[$i][2]);#p4
+		#($save_C[$i][0], save[$i][1], save[$i][2])#p2
+		#($x_O, $y_O, $z_O)#p3
+		#(0, 0, 0)#p1
+		#print "CH_spectra   $x_C    $y_C    $z_C\n";
+		#print "OH_spectra   $x_O    $y_O    $z_O\n\n";
+	
+		my $S1 = (($x_C - $save_C[$i][0])*(0 - $save_C[$i][2]) - ($z_C - $save_C[$i][2])*(0 - $save_C[$i][0]))/2;
+		my $S2 = (($x_C - $save_C[$i][0])*($save_C[$i][2] - $z_O) - ($z_C - $save_C[$i][2])*($save_C[$i][0] - $x_O))/2;
+		#print "$i $S1   ,$S2\n";
+		#print "$x_C, $z_C, $x_O, $z_O\n";
+		if ($S1+$S2 == 0){
+			print "OH and CH are parallel in STEP$i.\n";
+			exit;
+		}
+		my $intersection_x = 0 + ($x_O - 0) * $S1 / ($S1 + $S2);
+		my $intersection_y = 0 + ($z_O - 0) * $S1 / ($S1 + $S2);
+		my $file = "point_plt/spectra_triangle/point".sprintf("%03d", $i).".plt";
+	        open(POINT, ">", $file);
+		print POINT "file_O = \"O_test/STEP$i.dat\"\n";
+		print POINT "file_C = \"C_test/STEP$i.dat\"\n";
+		print POINT "set title \"STEP-$i\"\n";
+		print POINT "set terminal pdfcairo\n";
+		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
+	        print POINT "\n";
+		print POINT "set size square\n";
+		print POINT "set xr[-2:2]\n";
+	        print POINT "set yr[-2:2]\n";
+		print POINT "pi = 3.1415 \n";
+	        print POINT "unset key\n";
+		print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+		" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
+	
+	        print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+		" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2])." nohead linestyle 2 lc \"purple\"\n";
+	
+	        print POINT "set arrow 3 from ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
+		" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
+	        print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
+			", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
+	
+		
+			#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_O).
+			#	", ".sprintf("%9.6f", $z_O).") pt 7\n";
+	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_C).
+			#	", ".sprintf("%9.6f", $z_C).") pt 7 lc \"green\"\n";
+	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
+			#	", ".sprintf("%9.6f", 1).") pt 7 lc \"green\"\n";
+	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
+			#	", ".sprintf("%9.6f", 0).") pt 7\n";
+		
+	
+		
+	        print POINT "plot file_C u (((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180*pi)) + $save_C[$i][0]):(((\$3/$scale_C) * cos((\$1/180)*pi)) + $save_C[$i][2]) w l\n";
+	        print POINT "plot file_O u ((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):(((\$3/$scale_O) * cos((\$1/180)*pi))) w l\n";
+		#print POINT "reset\n";
+		print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
+	        close(POINT);
+	        if ($output == 3){
+	                system("gnuplot $file");
+	                system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
+		}
+	
+	
+	}
+	if ($output == 3){
+		system("rm -rf ./output/spectra_triangle.mp4");
+		my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+		system($command_PNGtoGIF);
+		print "Finished png to gif.\n";
+		my $command_GIFtoMP4 = "ffmpeg -r 3 -i ./output/output_point.gif".
+	                        "  -movflags faststart -pix_fmt yuv420p -vf ".
+	                        "\"scale=trunc(iw/2)*2:trunc(ih/2)*2\" ./output/spectra_triangle.mp4";
+		system($command_GIFtoMP4);
+		print "Finished gif to mp4.\n";
+	}
 }
-
-
-
-
 
 
 ###################################
@@ -734,5 +935,9 @@ sub input_parameter {
                         $line =~ /energy="(.*)"/;
                         $energy = $1;
                 }
+		if ($line =~ /^peak_wide/){
+			$line =~ /peak_wide="(.*)"/;
+			$peak_wide = $1;
+		}
 	}
 }
