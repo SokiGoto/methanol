@@ -283,6 +283,10 @@ if ($output == 2){
 my $data_j;
 my @data;
 my @peak_C;
+if (-d "C_test"){rmtree("C_test")};mkdir("C_test");
+if (-d "point_plt/C/"){rmtree("point_plt/C/")}mkdir("point_plt/C");
+if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
+if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 for(my $i = 0; $i < $STEP; $i++){
         open(IN, "<", "../C_".$energy."eV/plot-data/STEP$i.dat")or die $!;
         my @lines = <IN>;
@@ -294,7 +298,7 @@ for(my $i = 0; $i < $STEP; $i++){
                 my @line_split = split(/\s+/, $line);
 		$data[$i][$j][1] = $line_split[1];
                 $data[$i][$j][2] = $line_split[2];
-                $data[$i][$j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3;
+                $data[$i][$j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
 		#print "@line_split\n";
 		#print "$data[$i][$j][3]\n";
 		#print OUT $lines[$j*362];
@@ -313,11 +317,19 @@ for(my $i = 0; $i < $STEP; $i++){
 		#print "@line_split\n"
         }
         close(IN);
+	
+	open(OUT_DIFF, ">", "C_test/STEP$i\_diff.dat") or die $!;
+	for(my $j = 0; $j <= 180; $j++){
+		my $diff = $data[$i][$j][3] - $data[$i][360 - $j][3];
+		print OUT_DIFF sprintf("%6.2f", $data[$i][$j][1]).
+		         "  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $diff)."\n"
+		#my ($diff_x, $diff_y, $diff_z) = spherical_to_cartesian($diff,
+                #                        deg2rad($peak_C[$i][$j][2]), deg2rad($peak_C[$i][$j][1]));
+		#print OUT_DIFF sprintf("%9.6f", $diff_x + $save_C[$i][0]).
+		#	"  ".sprintf("%9.6f", $diff_z + $save_C[$i][2])."\n";
+	}
+	close(OUT_DIFF);
 }
-if (-d "C_test"){rmtree("C_test")};mkdir("C_test");
-if (-d "point_plt/C/"){rmtree("point_plt/C/")}mkdir("point_plt/C");
-if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
-if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 for (my $i = 0; $i < $STEP; $i++){
         open(OUT_C, ">", "C_test/STEP$i.dat") or die $!;
         open(OUT_PEAK, ">", "C_test/STEP$i\_PEAK.dat") or die $!;
@@ -402,6 +414,12 @@ my $data_j;
 my @data;
 my @peak_O;
 #=============== O =============
+if (-d "O_test"){rmtree("O_test")};mkdir("O_test");
+#if (-d "point_plt"){rmtree("point_plt")}mkdir("point_plt");
+if (-d "point_plt/O"){rmtree("point_plt/O")}mkdir("point_plt/O");
+if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
+if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
+
 for(my $i = 0; $i < $STEP; $i++){
         open(IN, "<", "../".$energy."eV/plot-data/STEP$i.dat")or die $!;
         my @lines = <IN>;
@@ -432,12 +450,18 @@ for(my $i = 0; $i < $STEP; $i++){
 		#print "@line_split\n"
         }
         close(IN);
+
+	open(OUT_DIFF, ">", "O_test/STEP$i\_diff.dat") or die $!;
+	for(my $j = 0; $j < 180; $j++){
+		my $diff = $data[$i][$j][3] - $data[$i][360 - $j][3];
+		print OUT_DIFF sprintf("%6.2f", $data[$i][$j][1]).
+			"  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $diff)."\n";
+		#my ($diff_x, $diff_y, $diff_z) = spherical_to_cartesian($diff,
+		#                        deg2rad($peak_C[$i][$j][2]), deg2rad($peak_C[$i][$j][1]));
+		#print OUT_DIFF sprintf("%9.6f", $diff_x)."  ".sprintf("%9.6f", $diff_z)."\n";
+	}
+	close(OUT_DIFF);
 }
-if (-d "O_test"){rmtree("O_test")};mkdir("O_test");
-#if (-d "point_plt"){rmtree("point_plt")}mkdir("point_plt");
-if (-d "point_plt/O"){rmtree("point_plt/O")}mkdir("point_plt/O");
-if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
-if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 
 for (my $i = 0; $i < $STEP; $i++){
         open(OUT_C, ">", "O_test/STEP$i.dat") or die $!;
@@ -460,21 +484,25 @@ for (my $i = 0; $i < $STEP; $i++){
 
 
         for (my $j = 0; $j <= 2 * 180; $j++){
-                print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
+                print OUT_C sprintf("%6.2f", $data[$i][$j][1]).
+			"  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
                 if ($data[$i][$j-1][3] < $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] < $data[$i][$j][3]){
                         $peak_O[$i][$j][1] = $data[$i][$j][1];
                         $peak_O[$i][$j][2] = $data[$i][$j][2];
                         $peak_O[$i][$j][3] = $data[$i][$j][3];
-                        print OUT_PEAK sprintf("%6.2f", $peak_O[$i][$j][1])."  ".sprintf("%6.2f", $peak_O[$i][$j][2])."  ".sprintf("%9.6f", $peak_O[$i][$j][3])."\n";
+                        print OUT_PEAK sprintf("%6.2f", $peak_O[$i][$j][1])."  ".
+				sprintf("%6.2f", $peak_O[$i][$j][2])."  ".sprintf("%9.6f", $peak_O[$i][$j][3])."\n";
 
 
 			### make .plt ###
-			my ($x, $y, $z) = spherical_to_cartesian($peak_O[$i][$j][3], $peak_O[$i][$j][1], $peak_O[$i][$j][2]);
+			my ($x, $y, $z) = spherical_to_cartesian($peak_O[$i][$j][3], 
+				$peak_O[$i][$j][1], $peak_O[$i][$j][2]);
 			#print PLT "set arrow from 0,0 to ".($peak[$i][$j][1]).",".($peak[$i][$j][3])." nohead \n";
 			### end .plt #####
                 }
 		if ($data[$i][$j-1][3] > $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] > $data[$i][$j][3]){
-                        print OUT_VALLEY sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
+                        print OUT_VALLEY sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2]).
+				"  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
 		}
 
         }
@@ -762,8 +790,15 @@ sub brode_triangle {
 	#my $CH_peak_r = $data[0][$force_peak_C[0][0]][3];
 
 
-	#my $peak_wide_C = 51;
-	#my $peak_wide_O = 30;
+	my $peak_wide_C;
+	my $peak_wide_O;
+	if ($energy == "2500"){
+		$peak_wide_C = $peak_wide;
+		$peak_wide_O = $peak_wide;
+	} elsif ($energy == "100"){
+		$peak_wide_C = 30;
+		$peak_wide_O = 30;
+	}
 	
 	for(my $i = 0; $i < $STEP; $i++){
 	        my ($x_C, $y_C, $z_C);
@@ -780,8 +815,8 @@ sub brode_triangle {
 			if ($peak_C[$i][$j][2] == 180){
 	                        $theta_C = -$peak_C[$i][$j][1];
 	                }
-			if ($theta_C > $CH_peak_theta - $peak_wide and $theta_C < $CH_peak_theta + $peak_wide){
-			#if ($theta_C > $CH_peak_theta - $peak_wide_C and $theta_C < $CH_peak_theta + $peak_wide_C){
+			#if ($theta_C > $CH_peak_theta - $peak_wide and $theta_C < $CH_peak_theta + $peak_wide){
+			if ($theta_C > $CH_peak_theta - $peak_wide_C and $theta_C < $CH_peak_theta + $peak_wide_C){
 				if ($peak_C[$i][$j][3] > $CH_peak_r){
 					$theta_keep_C = $theta_C;
 					$CH_peak_r = $peak_C[$i][$j][3];
@@ -791,7 +826,7 @@ sub brode_triangle {
 			}
 		}
 		if ($theta_keep_C == ""){
-			print "not found STEP $i C peak";
+			print "not found STEP $i C peak\n";
 			exit;
 		}
 		$CH_peak_theta = $theta_keep_C;
@@ -807,8 +842,8 @@ sub brode_triangle {
 	                if ($peak_O[$i][$j][2] == 180){
 	                        $theta_O = -$peak_O[$i][$j][1];
 	                }
-			if ($theta_O > $OH_peak_theta - $peak_wide and $theta_O < $OH_peak_theta + $peak_wide){
-			#if ($theta_O > $OH_peak_theta - $peak_wide_O and $theta_O < $OH_peak_theta + $peak_wide_O){
+			#if ($theta_O > $OH_peak_theta - $peak_wide and $theta_O < $OH_peak_theta + $peak_wide){
+			if ($theta_O > $OH_peak_theta - $peak_wide_O and $theta_O < $OH_peak_theta + $peak_wide_O){
 	                        if ($peak_O[$i][$j][3] > $OH_peak_r){
 	                                $theta_keep_O = $theta_O;
 	                                $OH_peak_r = $peak_O[$i][$j][3];
@@ -818,7 +853,7 @@ sub brode_triangle {
 	                }
 	        }
 		if ($theta_keep_O == ""){
-			print "not found STEP $i O peak";
+			print "not found STEP $i O peak\n";
 			exit;
 		}
 	        $OH_peak_theta = $theta_keep_O;
@@ -843,14 +878,19 @@ sub brode_triangle {
 		
 		
 		($x_C, $y_C, $z_C) = ($x_C + $save_C[$i][0], $y_C + $save_C[$i][1], $z_C + $save_C[$i][2]);#p4
+
+
 		#($save_C[$i][0], save[$i][1], save[$i][2])#p2
 		#($x_O, $y_O, $z_O)#p3
 		#(0, 0, 0)#p1
 		#print "CH_spectra   $x_C    $y_C    $z_C\n";
 		#print "OH_spectra   $x_O    $y_O    $z_O\n\n";
 	
-		my $S1 = (($x_C - $save_C[$i][0])*(0 - $save_C[$i][2]) - ($z_C - $save_C[$i][2])*(0 - $save_C[$i][0]))/2;
-		my $S2 = (($x_C - $save_C[$i][0])*($save_C[$i][2] - $z_O) - ($z_C - $save_C[$i][2])*($save_C[$i][0] - $x_O))/2;
+		my $S1 = (($x_C - $save_C[$i][0]) *
+			(0 - $save_C[$i][2]) - ($z_C - $save_C[$i][2]) * (0 - $save_C[$i][0])) / 2;
+
+		my $S2 = (($x_C - $save_C[$i][0]) *
+			($save_C[$i][2] - $z_O) - ($z_C - $save_C[$i][2])*($save_C[$i][0] - $x_O)) / 2;
 		#print "$i $S1   ,$S2\n";
 		#print "$x_C, $z_C, $x_O, $z_O\n";
 		if ($S1+$S2 == 0){
@@ -863,6 +903,8 @@ sub brode_triangle {
 	        open(POINT, ">", $file);
 		print POINT "file_O = \"O_test/STEP$i.dat\"\n";
 		print POINT "file_C = \"C_test/STEP$i.dat\"\n";
+		print POINT "file_O_diff = \"O_test/STEP$i\_diff.dat\"\n";
+		print POINT "file_C_diff = \"C_test/STEP$i\_diff.dat\"\n";
 		print POINT "set title \"STEP-$i\"\n";
 		print POINT "set terminal pdfcairo\n";
 		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
@@ -872,17 +914,30 @@ sub brode_triangle {
 	        print POINT "set yr[-2:2]\n";
 		print POINT "pi = 3.1415 \n";
 	        print POINT "unset key\n";
-		print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
-		" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
+		if ($CH_peak_theta - $OH_peak_theta < 0){
+			print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+                        	" to ".sprintf("%9.6f", $x_O).", ".sprintf("%9.6f", $z_O).
+                        	" nohead linestyle 2 lc \"purple\"\n";
+
+			print POINT "set arrow 2 from ".sprintf("%9.6f", $save_C[$i][0]).", ".
+				sprintf("%9.6f", $save_C[$i][2])." to ".sprintf("%9.6f", $x_C).", ".
+				sprintf("%9.6f", $z_C)." nohead linestyle 2 lc \"purple\"\n";
+		} else {
+			print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+				" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y).
+				" nohead linestyle 2 lc \"purple\"\n";
 	
-	        print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
-		" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2])." nohead linestyle 2 lc \"purple\"\n";
+	        	print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+				" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
+				" nohead linestyle 2 lc \"purple\"\n";
 	
-	        print POINT "set arrow 3 from ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
-		" to ".sprintf("%9.6f", $intersection_x).", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
-	        print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
-			", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
-	
+	        	print POINT "set arrow 3 from ".sprintf("%9.6f", $save_C[$i][0]).", ".
+				sprintf("%9.6f", $save_C[$i][2])." to ".sprintf("%9.6f", $intersection_x).
+				", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
+
+	        	print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
+				", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
+		}
 		
 			#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_O).
 			#	", ".sprintf("%9.6f", $z_O).") pt 7\n";
@@ -892,17 +947,31 @@ sub brode_triangle {
 			#	", ".sprintf("%9.6f", 1).") pt 7 lc \"green\"\n";
 	        	#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", 0).
 			#	", ".sprintf("%9.6f", 0).") pt 7\n";
-		
+	
+		#print POINT "plot file_C_diff w l\n";
+		#print POINT "plot file_O_diff w l\n";
+	        print POINT "plot file_C_diff u ".
+			"(((\$3/$scale_C + 0.5) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
+			"(((\$3/$scale_C + 0.5) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l lc \"blue\"\n";
+	        print POINT "plot file_O_diff u ".
+			"((\$3/$scale_O + 0.5) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
+			"((\$3/$scale_O + 0.5) * cos((\$1/180)*pi)) w l lc \"red\"\n";
 	
 		
-	        print POINT "plot file_C u (((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180*pi)) + $save_C[$i][0]):(((\$3/$scale_C) * cos((\$1/180)*pi)) + $save_C[$i][2]) w l\n";
-	        print POINT "plot file_O u ((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):(((\$3/$scale_O) * cos((\$1/180)*pi))) w l\n";
+	        print POINT "plot file_C u ".
+			"(((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
+			"(((\$3/$scale_C) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l\n";
+	        print POINT "plot file_O u ".
+			"((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
+			"((\$3/$scale_O) * cos((\$1/180) * pi)) w l\n";
 		#print POINT "reset\n";
 		print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
 	        close(POINT);
 	        if ($output == 3){
 	                system("gnuplot $file");
-	                system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
+	                system("magick -density 300 point_pdf/output-".
+				sprintf("%03d", $i).".pdf -layers flatten point_png/output-".
+				sprintf("%03d", $i).".png");
 		}
 	
 	
