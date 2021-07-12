@@ -4,7 +4,8 @@ use strict;
 #dos2unix filename.*** <- code CR+LF to LF
 #iconv -f sjis -t utf8 ***.txt -o ***.txt  <- encoding sjis to utf-8
 
-my $input_file = "input.txt";
+#my $input_file = "input.txt";
+my $input_file = "CH2+_H2O+_1.xyz";
 my $output_file = "output.txt";
 
 my $total_line = 7;

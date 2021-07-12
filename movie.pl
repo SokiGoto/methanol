@@ -27,17 +27,29 @@ my $rO = 0.5794375693;
 my $rC = 0.6239214294;
 my $rH = 0.4555414633;
 my $r_max = max($rO, $rC, $rH);
+my $atom_max;
 my $mode = 3; #mode=1 only atom ,mode=2 only spectra, mode=3 atom and spectra
+my $range_mode = 1; #range_mode = 1 check range, range_mode = 0 force range
 my $log_01 = 0;
 
 &option;
 &input_parameter;
 if ($energy == 2500){
 	$scale = 4000;
+	$scale = 0;
 } elsif ($energy == 100){
 	$scale = 30
 }
-&check_range;
+if ($range_mode == 1){
+	&check_range;
+}elsif ($range_mode == 2){
+	$xmax = 2.4747964294;
+	$xmin = -2.0088334294;
+	$ymax = 1.7756284294;
+	$ymin = -2.0782344294;
+	$zmax = 7.5896164294;
+	$zmin = -1.7003424294;
+}
 &movie_atom;
 
 sub option{
@@ -45,11 +57,12 @@ sub option{
                 print "movie.pl program make atom and spectra movie.\n";
                 print "--------------------------------------------------------------------------\n";
                 print "options\n";
-                print "  -o [filename]  |name output file\n";
-                print "  -mode [number] |make movie mode. 1:atom only 2:spectra only 3(defult):atom and spectra\n";
-		print "  -log           |Leave a log\n";
-                print "  -version, -v   |display version information\n";
-                print "  -help          |show help\n";
+                print "  -o [filename]   |name output file\n";
+                print "  -mode [number]  |make movie mode. 1:atom only 2:spectra only 3(defult):atom and spectra\n";
+                print "  -rmode [number] |range mode. 1:check range 2:force range\n";
+		print "  -log            |Leave a log\n";
+                print "  -version, -v    |display version information\n";
+                print "  -help           |show help\n";
                 exit(0);
         }
 
@@ -87,12 +100,25 @@ sub option{
                 if ($ARGV[$result + 1]) {
                         $mode = $ARGV[$result + 1];
 			if ($mode != 1 && $mode != 2 && $mode != 3){
-				print "mode = 1 or 2 or 3.\n";
+				print "mode = 1, 2 or 3.\n";
 				exit(1);
 			}
                         splice(@ARGV, $result, 2);
                 } else {
                         print "Please enter mode.\n";
+                        exit(1);
+                }
+        }
+	if (my ($result) = grep { $ARGV[$_] eq '-rmode' } 0 .. $#ARGV) {
+                if ($ARGV[$result + 1]) {
+                        $range_mode = $ARGV[$result + 1];
+			if ($range_mode != 1 && $range_mode != 2){
+				print "rmode = 1 or 2.\n";
+				exit(1);
+			}
+                        splice(@ARGV, $result, 2);
+                } else {
+                        print "Please enter rmode.\n";
                         exit(1);
                 }
         }
@@ -106,7 +132,7 @@ sub option{
 }
 
 sub input_parameter {
-        open(IN, "<", "input_methanol.txt");
+        open(IN, "<", "input_methanol.txt") or die "not found input_methanol.txt";
         while(my $line = <IN>){
                 chomp($line);
                 $line =~ s/ //g;
@@ -171,10 +197,29 @@ sub check_range{
 	                	if ($data[3] - $r_max < $zmin) {$zmin = $data[3] - $r_max}
         	        }
         	}
+		$atom_max = max(abs($xmax),abs($zmax),abs($xmin),abs($zmin))
 		#print "$xmax : $xmin : $ymax : $ymin : $zmax : $zmin \n";
 	}
 
 	if ($mode == 2 || $mode == 3){
+		for (my $i = 0; $i < $STEP; $i++) {
+                        if (!-d "plot-data"){
+                                print "You should run spec calculation.\n";
+                                exit(1);
+                        }
+                        open(CHECK, "<", "./plot-data/STEP$i.dat")or die $!;
+                        while(my $line = <CHECK>){
+                                my @data = split(/\s+/, $line);
+                                #print "$data[0] : $data[1] : $data[2] : $data[3] : $data[4] : ".
+                                #       "$data[5] : $data[6] : $data[7] : $data[8] : $data[9]\n";
+                                our $check_scale = (($data[3]+$data[6]+$data[9])/3.0);
+				if($check_scale > $scale){
+					$scale = $atom_max/($check_scale * 3);
+					$cbrmax = $check_scale*$scale*2.5;
+				}
+                        }
+                }
+		print "$cbrmax\n";
         	for (my $i = 0; $i < $STEP; $i++) {
 			if (!-d "plot-data"){
 				print "You should run spec calculation.\n";
@@ -212,6 +257,7 @@ sub check_range{
 
 
 sub movie_atom{
+	print "$zmax\n";
         if (-d "plot_atom"){system("rm -r plot_atom/")}
 	if ($mode == 1 || $mode == 3){mkdir "plot_atom"}
         if (-d "plot_spectra"){system("rm -r plot_spectra/")}
@@ -343,6 +389,7 @@ sub movie_atom{
                 	print SPE_OUT "set palette gamma 3\n";
                 	print SPE_OUT "unse colorbox\n";
                 	print SPE_OUT "scale = $scale\n";
+			#print SPE_OUT "set cbr[0:$cbrmax]";
                 	print SPE_OUT "set cbr[0:$cbrmax]";
                 	print SPE_OUT "\n";
                 	print SPE_OUT "splot file u \\\n";
