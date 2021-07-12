@@ -24,9 +24,13 @@ my @save_C;
 #my $OH_peak = 59.00;
 #my $CH_peak = 61.00;
 my $output = 3;
+my $normalization = 0;
+my $diff = 0;
 
 &input_parameter();
 
+
+my $yrange_max = 9;
 my @xrange;
 my @yrange;
 my $scale_C;
@@ -34,13 +38,13 @@ my $scale_O;
 if ($energy == 2500){
 	@xrange = (-0.0015, 0.0015);
 	@yrange = (-0.0015, 0.0015);
-	$scale_C = 0.0015;
+	$scale_C = 0.0007;
 	$scale_O = 0.003;
 } elsif ($energy == 100) {
 	@xrange = (-0.2, 0.2);
 	@yrange = (-0.2, 0.2);
-	$scale_C = 0.2;
-	$scale_O = 0.2;
+	$scale_C = 0.08;
+	$scale_O = 0.05;
 }
 
 open(STR, "<", $input_file) or die $!;
@@ -125,61 +129,87 @@ for (my $i = 0; $i < $STEP; $i++){
 			my $x = $data[1] - $move_x;
 	                my $y = $data[2] - $move_y;
 	                my $z = $data[3] - $move_z;
-	
-	                my $r_;
-	                my $theta_;
-	                my $phi_;
-	                my $x_;
-	                my $y_;
-	                my $z_;
-	                ($r_, $theta_, $phi_) = cartesian_to_spherical($x, $y, $z);
-	                ($x_, $y_, $z_) = spherical_to_cartesian($r_/$C_r, $theta_, $phi_);
-	                #print $data[0]."  ".$x_."  ".$y_."  ".$z_."\n";
-	                print OUT $data[0]."  ".sprintf("%9.6f", $x_)."  ".sprintf("%9.6f", $y_).
-			"  ".sprintf("%9.6f", $z_)."\n";
 
-			$H_x = $x_;
-			$H_y = $y_;
-			$H_z = $z_;
+			#normalization
+			if ($normalization == 1){
+				#my $r;
+		                #my $theta;
+		                #my $phi;
+			#my $x_;#
+	                #my $y_;#
+	                #my $z_;#
+		                #($r, $theta, $phi) = cartesian_to_spherical($x, $y, $z);
+	        	        #($x, $y, $z) = spherical_to_cartesian($r/$C_r, $theta, $phi);
+				my $r_norma;
+				my $theta_norma;
+				my $phi_norma;
+				#my $x_;
+				#my $y_;
+				#my $z_;
+				($r_norma, $theta_norma, $phi_norma) = cartesian_to_spherical($x, $y, $z);
+				($x, $y, $z) = spherical_to_cartesian($r_norma/$C_r, $theta_norma, $phi_norma);
+
+			}
+	                #print $data[0]."  ".$x_."  ".$y_."  ".$z_."\n";
+	                print OUT $data[0]."  ".sprintf("%9.6f", $x)."  ".sprintf("%9.6f", $y).
+			"  ".sprintf("%9.6f", $z)."\n";
+
+			$H_x = $x;
+			$H_y = $y;
+			$H_z = $z;
 		} elsif ($data[0] eq "C"){
 			my $x = $data[1] - $move_x;
 	                my $y = $data[2] - $move_y;
 	                my $z = $data[3] - $move_z;
 			#print "$x : $y : $z \n";
-	
-	                my $r_;
-	                my $theta_;
-	                my $phi_;
-	                my $x_;
-	                my $y_;
-	                my $z_;
-	                ($r_, $theta_, $phi_) = cartesian_to_spherical($x, $y, $z);
-	                ($x_, $y_, $z_) = spherical_to_cartesian($r_/$C_r, $theta_, $phi_);
-			($save_C[$i][0], $save_C[$i][1], $save_C[$i][2]) = ($x_, $y_, $z_);
+
+			if ($normalization == 1){
+				#my $r;
+	                	#my $theta;
+	                	#my $phi;
+				##my $x_;
+	                	##my $y_;
+	                	##my $z_;
+	                	#($r, $theta, $phi) = cartesian_to_spherical($x, $y, $z);
+	                	#($x, $y, $z) = spherical_to_cartesian($r/$C_r, $theta, $phi);
+
+				my $r_norma;
+				my $theta_norma;
+				my $phi_norma;
+				#my $x_;
+				#my $y_;
+				#my $z_;
+				($r_norma, $theta_norma, $phi_norma) = cartesian_to_spherical($x, $y, $z);
+				($x, $y, $z) = spherical_to_cartesian($r_norma/$C_r, $theta_norma, $phi_norma);
+
+			}
+			($save_C[$i][0], $save_C[$i][1], $save_C[$i][2]) = ($x, $y, $z);
 			#print "$save_C[$i][0]  $save_C[$i][1]\n";
 	                #print $data[0]."  ".$x_."  ".$y_."  ".$z_."\n";
-	                print OUT $data[0]."  ".sprintf("%9.6f", $x_)."  ".sprintf("%9.6f", $y_).
-			"  ".sprintf("%9.6f", $z_)."\n";
+	                print OUT $data[0]."  ".sprintf("%9.6f", $x)."  ".sprintf("%9.6f", $y).
+			"  ".sprintf("%9.6f", $z)."\n";
 
-			$C_x = $x_;
-			$C_y = $y_;
-			$C_z = $z_;
+			$C_x = $x;
+			$C_y = $y;
+			$C_z = $z;
 		} else {
 			my $x = $data[1] - $move_x;
                 	my $y = $data[2] - $move_y;
                 	my $z = $data[3] - $move_z;
 			
-			my $r_;
-			my $theta_;
-			my $phi_;
-			my $x_;
-			my $y_;
-			my $z_;
-			($r_, $theta_, $phi_) = cartesian_to_spherical($x, $y, $z);
-			($x_, $y_, $z_) = spherical_to_cartesian($r_/$C_r, $theta_, $phi_);
-			#print $data[0]."  ".$x_."  ".$y_."  ".$z_."\n";
-			print OUT $data[0]."  ".sprintf("%9.6f", $x_)."  ".
-			sprintf("%9.6f", $y_)."  ".sprintf("%9.6f", $z_)."\n";
+			if ($normalization == 1){
+				my $r_norma;
+				my $theta_norma;
+				my $phi_norma;
+				#my $x_;
+				#my $y_;
+				#my $z_;
+				($r_norma, $theta_norma, $phi_norma) = cartesian_to_spherical($x, $y, $z);
+				($x, $y, $z) = spherical_to_cartesian($r_norma/$C_r, $theta_norma, $phi_norma);
+				#print $data[0]."  ".$x_."  ".$y_."  ".$z_."\n";
+			}
+			print OUT $data[0]."  ".sprintf("%9.6f", $x)."  ".
+			sprintf("%9.6f", $y)."  ".sprintf("%9.6f", $z)."\n";
 		}
 	}
 	close(OUT);
@@ -198,8 +228,14 @@ for (my $i = 0; $i < $STEP; $i++){
 		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
 	}
 	print POINT "\n";
-	print POINT "set xr[-2:2]\n";
-	print POINT "set yr[-2:2]\n";
+	if ($normalization == 1){
+		print POINT "set xr[-2:2]\n";
+		print POINT "set yr[-2:2]\n";
+	} else {
+		print POINT "set xr[-2:2]\n";
+                print POINT "set yr[-2:$yrange_max]\n";
+	}
+	print POINT "set xtics -1 ,1 , 2\n";
 	print POINT "set arrow 1 from ".sprintf("%9.6f", $H_x).", ".sprintf("%9.6f", $H_z)." to ".sprintf("%9.6f", $C_x).", ".sprintf("%9.6f", $C_z)." nohead linestyle 2 lc \"green\"\n";
 	print POINT "set arrow 2 from ".sprintf("%9.6f", $H_x).", ".sprintf("%9.6f", $H_z)." to ".sprintf("%9.6f", $O_x).", ".sprintf("%9.6f", $O_z)." nohead linestyle 2 lc \"green\"\n";
 	print POINT "set arrow 3 from ".sprintf("%9.6f", $C_x).", ".sprintf("%9.6f", $C_z)." to ".sprintf("%9.6f", $O_x).", ".sprintf("%9.6f", $O_z)." nohead linestyle 2 lc \"green\"\n";
@@ -792,13 +828,15 @@ sub brode_triangle {
 
 	my $peak_wide_C;
 	my $peak_wide_O;
-	if ($energy == "2500"){
-		$peak_wide_C = $peak_wide;
-		$peak_wide_O = $peak_wide;
-	} elsif ($energy == "100"){
-		$peak_wide_C = 30;
-		$peak_wide_O = 30;
-	}
+	#if ($energy == "2500"){
+	#	$peak_wide_C = $peak_wide;
+	#	$peak_wide_O = $peak_wide;
+	#} elsif ($energy == "100"){
+	#	$peak_wide_C = 35;
+	#	$peak_wide_O = 35;
+	#}
+	$peak_wide_C = $peak_wide;
+	$peak_wide_O = $peak_wide;
 	
 	for(my $i = 0; $i < $STEP; $i++){
 	        my ($x_C, $y_C, $z_C);
@@ -908,10 +946,17 @@ sub brode_triangle {
 		print POINT "set title \"STEP-$i\"\n";
 		print POINT "set terminal pdfcairo\n";
 		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
-	        print POINT "\n";
-		print POINT "set size square\n";
-		print POINT "set xr[-2:2]\n";
-	        print POINT "set yr[-2:2]\n";
+		print POINT "\n";
+		print POINT "set size ratio -1\n";
+		#print POINT "set size square\n";
+		if ($normalization == 1){
+			print POINT "set xr[-2:2]\n";
+	        	print POINT "set yr[-2:2]\n";
+		} else {
+			print POINT "set xr[-2:2]\n";
+                        print POINT "set yr[-2:$yrange_max]\n";
+		}
+		print POINT "set xtics -1 ,1 , 2\n";
 		print POINT "pi = 3.1415 \n";
 	        print POINT "unset key\n";
 		if ($CH_peak_theta - $OH_peak_theta < 0){
@@ -950,12 +995,14 @@ sub brode_triangle {
 	
 		#print POINT "plot file_C_diff w l\n";
 		#print POINT "plot file_O_diff w l\n";
-	        print POINT "plot file_C_diff u ".
-			"(((\$3/$scale_C + 0.5) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
-			"(((\$3/$scale_C + 0.5) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l lc \"blue\"\n";
-	        print POINT "plot file_O_diff u ".
-			"((\$3/$scale_O + 0.5) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
-			"((\$3/$scale_O + 0.5) * cos((\$1/180)*pi)) w l lc \"red\"\n";
+		if ($diff == 1){
+		        print POINT "plot file_C_diff u ".
+				"(((\$3/$scale_C + 0.5) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
+				"(((\$3/$scale_C + 0.5) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l lc \"blue\"\n";
+		        print POINT "plot file_O_diff u ".
+				"((\$3/$scale_O + 0.5) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
+				"((\$3/$scale_O + 0.5) * cos((\$1/180)*pi)) w l lc \"red\"\n";
+		}
 	
 		
 	        print POINT "plot file_C u ".
