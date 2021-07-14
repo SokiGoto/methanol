@@ -39,12 +39,12 @@ if ($energy == 2500){
 	@xrange = (-0.0015, 0.0015);
 	@yrange = (-0.0015, 0.0015);
 	$scale_C = 0.0007;
-	$scale_O = 0.003;
+	$scale_O = 0.0015;
 } elsif ($energy == 100) {
 	@xrange = (-0.2, 0.2);
 	@yrange = (-0.2, 0.2);
-	$scale_C = 0.08;
-	$scale_O = 0.05;
+	$scale_C = 0.1;
+	$scale_O = 0.1;
 }
 
 open(STR, "<", $input_file) or die $!;
@@ -457,7 +457,7 @@ if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
 if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 
 for(my $i = 0; $i < $STEP; $i++){
-        open(IN, "<", "../".$energy."eV/plot-data/STEP$i.dat")or die $!;
+        open(IN, "<", "../O_".$energy."eV/plot-data/STEP$i.dat")or die $!;
         my @lines = <IN>;
 	chomp(@lines);
         for(my $j = 0; $j <= 180; $j++){
