@@ -1,12 +1,14 @@
 #!/usr/bin/perl
 use strict;
 use List::Util 'max', 'min';
+use Math::Trig;
+
 
 my $output_file = "output";
 my $input_file;
 my $energy;
 my $STEP;
-my $scale;
+my $scale = 0.0;
 my $absorbing_atom;
 #my $scale = 2500; #2500eV
 #my $scale = 30; #100eV
@@ -34,12 +36,12 @@ my $log_01 = 0;
 
 &option;
 &input_parameter;
-if ($energy == 2500){
-	$scale = 4000;
-	$scale = 0;
-} elsif ($energy == 100){
-	$scale = 30
-}
+#if ($energy == 2500){
+#	$scale = 4000;
+#	$scale = 0;
+#} elsif ($energy == 100){
+#	$scale = 30
+#}
 if ($range_mode == 1){
 	&check_range;
 }elsif ($range_mode == 2){
@@ -197,8 +199,9 @@ sub check_range{
 	                	if ($data[3] - $r_max < $zmin) {$zmin = $data[3] - $r_max}
         	        }
         	}
-		$atom_max = max(abs($xmax),abs($zmax),abs($xmin),abs($zmin))
+		$atom_max = max(abs($xmax),abs($zmax),abs($xmin),abs($zmin));
 		#print "$xmax : $xmin : $ymax : $ymin : $zmax : $zmin \n";
+		#print "$atom_max\n";
 	}
 
 	if ($mode == 2 || $mode == 3){
@@ -208,19 +211,24 @@ sub check_range{
                                 exit(1);
                         }
                         open(CHECK, "<", "./plot-data/STEP$i.dat")or die $!;
+			my $r_max;
                         while(my $line = <CHECK>){
                                 my @data = split(/\s+/, $line);
                                 #print "$data[0] : $data[1] : $data[2] : $data[3] : $data[4] : ".
                                 #       "$data[5] : $data[6] : $data[7] : $data[8] : $data[9]\n";
-                                our $check_scale = (($data[3]+$data[6]+$data[9])/3.0);
-				if($check_scale > $scale){
-					$scale = $atom_max/($check_scale * 3);
-					$cbrmax = $check_scale*$scale*2.5;
+                                my $check_scale = (($data[3]+$data[6]+$data[9])/3.0);
+				#print "$check_scale\n";
+				if ($check_scale > $r_max){
+					#print "$i $data[1] $data[2]\n";
+					#print "$check_scale\n";
+					$r_max = $check_scale;
 				}
                         }
+			$scale = $atom_max/$r_max;
+			$cbrmax = $r_max*$scale*2.5;
                 }
-		print "$cbrmax\n";
-        	for (my $i = 0; $i < $STEP; $i++) {
+		#print "$cbrmax\n";
+		for (my $i = 0; $i < $STEP; $i++) {
 			if (!-d "plot-data"){
 				print "You should run spec calculation.\n";
 				exit(1);
@@ -230,9 +238,9 @@ sub check_range{
         	                my @data = split(/\s+/, $line);
 				#print "$data[0] : $data[1] : $data[2] : $data[3] : $data[4] : ".
 				#	"$data[5] : $data[6] : $data[7] : $data[8] : $data[9]\n";
-        	                my $x = ($scale*($data[3]+$data[6]+$data[9])/3.0)*sin($data[1])*cos($data[2]);
-        	                my $y = ($scale*($data[3]+$data[6]+$data[9])/3.0)*sin($data[1])*sin($data[2]);
-        	                my $z = ($scale*($data[3]+$data[6]+$data[9])/3.0)*cos($data[1]);
+        	                my $x = ($scale*($data[3]+$data[6]+$data[9])/3.0)*sin(deg2rad($data[1]))*cos(deg2rad($data[2]));
+        	                my $y = ($scale*($data[3]+$data[6]+$data[9])/3.0)*sin(deg2rad($data[1]))*sin(deg2rad($data[2]));
+        	                my $z = ($scale*(($data[3]+$data[6]+$data[9])/3.0))*cos(deg2rad($data[1]));
         	                if ($xmax == 0 and $xmin == 0 and $ymax == 0
 						and $ymin == 0 and $zmax == 0 and $zmin == 0 ) {
         	                        $xmax = $x;
@@ -249,15 +257,15 @@ sub check_range{
         	                if ($z > $zmax) {$zmax = $z}
         	                if ($z < $zmin) {$zmin = $z}
         	        }
+        		close(CHECK);
         	}
 		#print "$xmax : $xmin : $ymax : $ymin : $zmax : $zmin \n";
 	}
-        close(CHECK);
 }
 
 
 sub movie_atom{
-	print "$zmax\n";
+	#print "$zmax\n";
         if (-d "plot_atom"){system("rm -r plot_atom/")}
 	if ($mode == 1 || $mode == 3){mkdir "plot_atom"}
         if (-d "plot_spectra"){system("rm -r plot_spectra/")}
@@ -371,8 +379,8 @@ sub movie_atom{
                 	print SPE_OUT "$set_view\n";
                 	print SPE_OUT "unset key\n";
                 	#print SPE_OUT "set origin 0, 0\n";
-                	print SPE_OUT "\n";
-                	print SPE_OUT "unse border\n";
+			print SPE_OUT "\n";
+			print SPE_OUT "unse border\n";
                 	print SPE_OUT "unse xtics\n";
                 	print SPE_OUT "unse ytics\n";
                 	print SPE_OUT "unse ztics\n";
