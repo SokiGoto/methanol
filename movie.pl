@@ -88,15 +88,6 @@ sub option{
                 splice(@ARGV, $result, 1);
         }
 
-        if (my ($result) = grep { $ARGV[$_] eq '-E' } 0 .. $#ARGV) {
-                if ($ARGV[$result + 1]) {
-                        $energy = $ARGV[$result + 1];
-                        splice(@ARGV, $result, 2);
-                } else {
-                        print "Please enter energy.\n";
-                        exit(1);
-                }
-        }
         
 	if (my ($result) = grep { $ARGV[$_] eq '-mode' } 0 .. $#ARGV) {
                 if ($ARGV[$result + 1]) {

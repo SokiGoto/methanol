@@ -187,7 +187,7 @@ for (my $i = 0; $i < $STEP; $i++){
 		$min_intensity = $CO_intensity;
 	}
 
-	print OUT "$i  $OC_dicetance[$i]  $OC_intensity $CO_intensity\n";
+	print OUT sprintf("%3s  %.8f  %.8f  %.8f", $i, $OC_dicetance[$i], $OC_intensity, $CO_intensity)."\n";
 	print "\n";
 }
 close(OUT);
@@ -198,13 +198,13 @@ my $scale = 1/$intensity_diff;
 
 my $title1;
 my $title2;
-if ($absorbing_atom eq "O"){
-	$title1 = "forward";
-	$title2 = "backword";
-} elsif ($absorbing_atom eq "C"){
-        $title1 = "backword";
-	$title2 = "forward";
-}
+#if ($absorbing_atom eq "O"){
+#	$title1 = "forward";
+#	$title2 = "backword";
+#} elsif ($absorbing_atom eq "C"){
+#        $title1 = "backword";
+#	$title2 = "forward";
+#}
 
 
 open(PLT, ">", "T_I.plt");
@@ -222,13 +222,23 @@ print PLT "set xlabel \"Time\"\n";
 print PLT "set ylabel \"Intensity\"\n";
 print PLT "set y2label \"R(t) (a.u.)\"\n";
 print PLT "\n";
-print PLT "plot \"R_I.dat\" u 1:($scale*\$3) axis x1y1 w l lw 3 title \"$title1\", \\\n";
-print PLT "        \"R_I.dat\" u 1:($scale*\$4) axis x1y1 w l lw 3 title \"$title2\", \\\n";
-print PLT "        \"R_I.dat\" u 1:(((sin(2*sqrt(2*$energy/27.21162)*\$2 + 0.5 ) + ".
-	sprintf("%.1f", ($intensity_diff*$scale)+1).
-	")/\$2)) axis x1y1 w l lw 3 title \"sin(2kR+0.5) + ".
-	sprintf("%.1f", ($intensity_diff*$scale)+1)."\", \\\n";
-print PLT "        \"R_I.dat\" u 1:2 axis x1y2 w l lw 3 title \"R\"\n";
+if ($absorbing_atom eq "O"){
+	print PLT "plot \"R_I.dat\" u 1:($scale*\$3) axis x1y1 w l lw 3 title \"forward\", \\\n";
+	print PLT "        \"R_I.dat\" u 1:($scale*\$4) axis x1y1 w l lw 3 title \"backward\", \\\n";
+	print PLT "        \"R_I.dat\" u 1:(((sin(2*sqrt(2*$energy/27.21162)*\$2 + 0.5 ) + ".
+		sprintf("%.1f", ($intensity_diff*$scale)+1).
+		")/\$2)) axis x1y1 w l lw 3 title \"sin(2kR+0.5) + ".
+		sprintf("%.1f", ($intensity_diff*$scale)+1)."\", \\\n";
+	print PLT "        \"R_I.dat\" u 1:2 axis x1y2 w l lw 3 title \"R\"\n";
+} elsif ($absorbing_atom eq "C"){
+	print PLT "plot \"R_I.dat\" u 1:($scale*\$4) axis x1y1 w l lw 3 title \"forward\", \\\n";
+        print PLT "        \"R_I.dat\" u 1:($scale*\$3) axis x1y1 w l lw 3 title \"backward\", \\\n";
+        print PLT "        \"R_I.dat\" u 1:(((sin(2*sqrt(2*$energy/27.21162)*\$2 + 0.5 ) + ".
+                sprintf("%.1f", ($intensity_diff*$scale)+1).
+                ")/\$2)) axis x1y1 w l lw 3 title \"sin(2kR+0.5) + ".
+                sprintf("%.1f", ($intensity_diff*$scale)+1)."\", \\\n";
+        print PLT "        \"R_I.dat\" u 1:2 axis x1y2 w l lw 3 title \"R\"\n";
+}
 close(PLT);
 
 system("gnuplot T_I.plt");
@@ -244,8 +254,13 @@ print PLT_RI "set ylabel \"Intensity\"\n";
 print PLT_RI "set title \"$absorbing_atom 1s ".$energy."eV\"\n";
 print PLT_RI "set format x \"%g\"\n";
 print PLT_RI "set format y \"%2.1f\"\n";
-print PLT_RI "plot \"R_I.dat\" u 2:($scale*\$3) w l lw 3 title \"$title1\", \\\n";
-print PLT_RI "		\"R_I.dat\" u 2:($scale*\$4) w l lw 3 title \"$title2\", \\\n";
+if ($absorbing_atom eq "O"){
+	print PLT_RI "plot \"R_I.dat\" u 2:($scale*\$3) w l lw 3 title \"forward\", \\\n";
+	print PLT_RI "		\"R_I.dat\" u 2:($scale*\$4) w l lw 3 title \"backward\", \\\n";
+} elsif ($absorbing_atom eq "C"){
+	print PLT_RI "plot \"R_I.dat\" u 2:($scale*\$4) w l lw 3 title \"forward\", \\\n";
+        print PLT_RI "          \"R_I.dat\" u 2:($scale*\$3) w l lw 3 title \"backward\", \\\n";
+}
 #print PLT_RI "		\"R_I.dat\" u 2:(sin(2*sqrt(2*$energy/27.21162)*\$2)) w l lw 3 title \"sin(2kR)\"\n";
 close(PLT_RI);
 system("gnuplot R_I.plt");
