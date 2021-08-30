@@ -19,8 +19,11 @@ my $rH = 0.04555414633 * 4;
 
 #my $energy = 100;
 
-my $energy;
+my $C_energy;
+my $O_energy;
 my $peak_wide;
+my $CH_peak_theta;
+my $OH_peak_theta;
 
 
 my $OH_peak;
@@ -44,18 +47,35 @@ my @xrange;
 my @yrange;
 my $scale_C;
 my $scale_O;
-if ($energy == 2500){
+if ($C_energy == 2500){
 	@xrange = (-0.0015, 0.0015);
 	@yrange = (-0.0015, 0.0015);
 	#$scale_C = 0.0013; #2021-07-04
 	#$scale_O = 0.006; #2021-07-04
 	$scale_C = 0.001; #2021-02-04
-	$scale_O = 0.004; #2021-02-04
-} elsif ($energy == 100) {
+} elsif ($C_energy == 100) {
 	@xrange = (-0.2, 0.2);
 	@yrange = (-0.2, 0.2);
 	$scale_C = 0.1; #2021-02-04
+} elsif ($C_energy == 1000) {
+	@xrange = (-0.2, 0.2);
+	@yrange = (-0.2, 0.2);
+	$scale_C = 0.008; #2021-02-04
+}
+if ($O_energy == 2500){
+	@xrange = (-0.0015, 0.0015);
+	@yrange = (-0.0015, 0.0015);
+	#$scale_C = 0.0013; #2021-07-04
+	#$scale_O = 0.006; #2021-07-04
+	$scale_O = 0.004; #2021-02-04
+} elsif ($O_energy == 100) {
+	@xrange = (-0.2, 0.2);
+	@yrange = (-0.2, 0.2);
 	$scale_O = 0.1;
+} elsif ($O_energy == 1000) {
+	@xrange = (-0.2, 0.2);
+	@yrange = (-0.2, 0.2);
+	$scale_O = 0.01;
 }
 
 open(STR, "<", $input_file) or die $!;
@@ -438,7 +458,7 @@ if (-d "point_plt/C/"){rmtree("point_plt/C/")}mkdir("point_plt/C");
 if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
 if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 for(my $i = 0; $i < $STEP; $i++){
-        open(IN, "<", "../C_".$energy."eV/plot-data/STEP$i.dat")or die $!;
+        open(IN, "<", "../C_".$C_energy."eV/plot-data/STEP$i.dat")or die $!;
         my @lines = <IN>;
 	chomp(@lines);
         for(my $j = 0; $j <= 180; $j++){
@@ -572,7 +592,7 @@ if (-d "point_png/"){rmtree("point_png/")}mkdir("point_png/");
 if (-d "point_pdf/"){rmtree("point_pdf/")}mkdir("point_pdf/");
 
 for(my $i = 0; $i < $STEP; $i++){
-        open(IN, "<", "../O_".$energy."eV/plot-data/STEP$i.dat")or die $!;
+        open(IN, "<", "../O_".$O_energy."eV/plot-data/STEP$i.dat")or die $!;
         my @lines = <IN>;
 	chomp(@lines);
         for(my $j = 0; $j <= 180; $j++){
@@ -915,31 +935,31 @@ sub triangle{
 
 
 sub brode_triangle {
-	open(IN, "<", "input_triangle_O.dat") or die $!;
-	my @force_peak_O;
-	my @force_peak_O_in = <IN>;
-	print "O force peak\n";
-	for(my $i = 0; $i <= $#force_peak_O_in; $i++){
-		chomp($force_peak_O_in[$i]);
-		my @line_split = split(/\s+/, $force_peak_O_in[$i]);
-		$force_peak_O[$i][0] = $line_split[0];
-		$force_peak_O[$i][1] = $line_split[1];
-		print "$force_peak_O[$i][0]   $force_peak_O[$i][1]\n";
-	}
-	my $OH_peak_theta = $force_peak_O[0][1];
-	#my $OH_peak_r = $data[0][$force_peak_O[0][0]][3];
-	open(IN, "<", "input_triangle_C.dat") or die $!;
-	my @force_peak_C;
-	my @force_peak_C_in = <IN>;
-	print "C force peak\n";
-	for(my $i = 0; $i <= $#force_peak_C_in; $i++){
-		chomp($force_peak_C_in[$i]);
-		my @line_split = split(/\s+/, $force_peak_C_in[$i]);
-		$force_peak_C[$i][0] = $line_split[0];
-		$force_peak_C[$i][1] = $line_split[1];
-		print "$force_peak_C[$i][0]   $force_peak_C[$i][1]\n";
-	}
-	my $CH_peak_theta = $force_peak_C[0][1];
+	#open(IN, "<", "input_triangle_O.dat") or die $!;
+	#my @force_peak_O;
+	#my @force_peak_O_in = <IN>;
+	#print "O force peak\n";
+	#for(my $i = 0; $i <= $#force_peak_O_in; $i++){
+	#	chomp($force_peak_O_in[$i]);
+	#	my @line_split = split(/\s+/, $force_peak_O_in[$i]);
+	#	$force_peak_O[$i][0] = $line_split[0];
+	#	$force_peak_O[$i][1] = $line_split[1];
+	#	print "$force_peak_O[$i][0]   $force_peak_O[$i][1]\n";
+	#}
+	#my $OH_peak_theta = $force_peak_O[0][1];
+	##my $OH_peak_r = $data[0][$force_peak_O[0][0]][3];
+	#open(IN, "<", "input_triangle_C.dat") or die $!;
+	#my @force_peak_C;
+	#my @force_peak_C_in = <IN>;
+	#print "C force peak\n";
+	#for(my $i = 0; $i <= $#force_peak_C_in; $i++){
+	#	chomp($force_peak_C_in[$i]);
+	#	my @line_split = split(/\s+/, $force_peak_C_in[$i]);
+	#	$force_peak_C[$i][0] = $line_split[0];
+	#	$force_peak_C[$i][1] = $line_split[1];
+	#	print "$force_peak_C[$i][0]   $force_peak_C[$i][1]\n";
+	#}
+	#my $CH_peak_theta = $force_peak_C[0][1];
 	#my $CH_peak_r = $data[0][$force_peak_C[0][0]][3];
 
 
@@ -1163,25 +1183,57 @@ sub brode_triangle {
 
 
 ###################################
+#sub input_parameter {
+#	open(IN, "<", "input_methanol.txt") or die "No found input_methanol.txt\n";
+#	while(my $line = <IN>){
+#		chomp($line);
+#		$line =~ s/ |\t//g;
+#		if ($line =~ /^structure_file/){
+#                        $line =~ /structure_file="(.*)"/;
+#                        $input_file = $1;
+#                }
+#		if ($line =~ /^energy/){
+#                        $line =~ /energy="(.*)"/;
+#                        $energy = $1;
+#                }
+#		if ($line =~ /^peak_wide/){
+#			$line =~ /peak_wide="(.*)"/;
+#			$peak_wide = $1;
+#		}
+#	}
+#}
 sub input_parameter {
-	open(IN, "<", "input_methanol.txt") or die "No found input_methanol.txt\n";
-	while(my $line = <IN>){
-		chomp($line);
-		$line =~ s/ |\t//g;
-		if ($line =~ /^structure_file/){
+	open(IN, "<", "input_methanol_triangle.txt") or die "No found input_methanol.txt\n";
+        while(my $line = <IN>){
+                chomp($line);
+                $line =~ s/ |\t//g;
+                if ($line =~ /^structure_file/){
                         $line =~ /structure_file="(.*)"/;
                         $input_file = $1;
                 }
-		if ($line =~ /^energy/){
-                        $line =~ /energy="(.*)"/;
-                        $energy = $1;
+                if ($line =~ /^C_energy/){
+                        $line =~ /C_energy="(.*)"/;
+                        $C_energy = $1;
                 }
-		if ($line =~ /^peak_wide/){
-			$line =~ /peak_wide="(.*)"/;
-			$peak_wide = $1;
-		}
-	}
+                if ($line =~ /^O_energy/){
+                        $line =~ /O_energy="(.*)"/;
+                        $O_energy = $1;
+                }
+                if ($line =~ /^peak_wide/){
+                        $line =~ /peak_wide="(.*)"/;
+                        $peak_wide = $1;
+                }
+                if ($line =~ /^C_first_peak/){
+                        $line =~ /C_first_peak="(.*)"/;
+                        $CH_peak_theta = $1;
+                }
+                if ($line =~ /^O_first_peak/){
+                        $line =~ /O_first_peak="(.*)"/;
+                        $OH_peak_theta = $1;
+                }
+        }
 }
+
 
 sub option{
 	if (my ($result) = grep { $ARGV[$_] eq '-help' } 0 .. $#ARGV) {
