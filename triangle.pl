@@ -10,6 +10,12 @@ my $extra_line = 2;
 my $total_line = $Number_of_atoms + $extra_line;
 my $input_file;
 
+#my $rO = 0.5794375693;
+#my $rC = 0.6239214294;
+#my $rH = 0.4555414633;
+my $rO = 0.05794375693 * 4;
+my $rC = 0.06239214294 * 4;
+my $rH = 0.04555414633 * 4;
 
 #my $energy = 100;
 
@@ -20,17 +26,20 @@ my $peak_wide;
 my $OH_peak;
 my $CH_peak;
 my @save_C;
+my @title;
 
 #my $OH_peak = 59.00;
 #my $CH_peak = 61.00;
 my $output = 3;
 my $normalization = 0;
+my $atom_plot = 0;
 my $diff = 0;
 
+&option();
 &input_parameter();
 
 
-my $yrange_max = 9;
+my $yrange_max = 4;
 my @xrange;
 my @yrange;
 my $scale_C;
@@ -38,12 +47,14 @@ my $scale_O;
 if ($energy == 2500){
 	@xrange = (-0.0015, 0.0015);
 	@yrange = (-0.0015, 0.0015);
-	$scale_C = 0.0007;
-	$scale_O = 0.0015;
+	#$scale_C = 0.0013; #2021-07-04
+	#$scale_O = 0.006; #2021-07-04
+	$scale_C = 0.001; #2021-02-04
+	$scale_O = 0.004; #2021-02-04
 } elsif ($energy == 100) {
 	@xrange = (-0.2, 0.2);
 	@yrange = (-0.2, 0.2);
-	$scale_C = 0.1;
+	$scale_C = 0.1; #2021-02-04
 	$scale_O = 0.1;
 }
 
@@ -85,6 +96,89 @@ for (my $i = 0; $i < $STEP; $i++){
 
 	my $theta12;
 
+
+	$title[$i] = $lines[$var + 1];
+	#print "$title[$i]\n";
+
+
+	###############         make plt          ##################
+	my $file = "point_plt/atom_triangle/point".sprintf("%03d", $i).".plt";
+	open(POINT, ">", $file);
+	if ($output == 2){
+		print POINT "set terminal pdfcairo\n";
+		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
+	}
+	#print POINT "set title \"STEP-$i\"\n";
+	print POINT "set title \"$title[$i]\"\n";
+	print POINT "set xtics -1 ,1 , 2\n";
+	print POINT "set size ratio -1\n";
+	print POINT "\n";
+	if ($normalization == 1){
+		print POINT "unset xtics\n";
+		print POINT "unset ytics\n";
+		print POINT "unset rtics\n";
+		print POINT "set xr[-2:2]\n";
+		print POINT "set yr[-2:2]\n";
+	} else {
+		print POINT "unset xtics\n";
+		print POINT "unset ytics\n";
+		print POINT "unset rtics\n";
+		print POINT "set xr[-2:2]\n";
+                print POINT "set yr[-2:$yrange_max]\n";
+	}
+	if ($atom_plot == 1){
+                print POINT 'unse key'."\n";
+                print POINT 'set pm3d'."\n";
+                print POINT 'set pm3d depthorder'."\n";
+                print POINT 'set pm3d lighting specular 0.7'."\n";
+                print POINT 'se isosamples 5'."\n";
+		#print POINT 'unse border'."\n";
+                print POINT 'unse xtics'."\n";
+                print POINT 'unse ytics'."\n";
+                print POINT 'unse ztics'."\n";
+                print POINT 'unse colorbox'."\n";
+                print POINT ''."\n";
+                print POINT '# 球面データファイル'."\n";
+                print POINT 'set parametric'."\n";
+                print POINT 'set urange [-0.1:pi]'."\n";
+                print POINT 'set vrange [0:2*pi]'."\n";
+                print POINT 'set samples 30'."\n";
+                print POINT 'set isosamples 30'."\n";
+                print POINT 'sphere="sphere_xyz.dat"'."\n";
+                print POINT 'set table sphere'."\n";
+                print POINT 'splot sin(u)*cos(v), sin(u)*sin(v), cos(u)'."\n";
+                print POINT 'unset table'."\n";
+                print POINT ''."\n";
+                print POINT '# 色分け関数'."\n";
+                print POINT 'u0 = pi/4'."\n";
+                print POINT 'v0 = 0'."\n";
+                print POINT 'x0 = sin(u0)*cos(v0); y0 = sin(u0)*sin(v0); z0 = cos(u0)'."\n";
+                print POINT 'rr(x,y,z) = (x-x0)**2 + (y-y0)**2 + (z-z0)**2'."\n";
+                print POINT 'f(x,y,z) =  exp(-rr(x,y,z)/2);'."\n";
+                print POINT 'H(x,y,z) = 0.2*f(x,y,z) '."\n";
+                print POINT 'O(x,y,z) = 0.2*f(x,y,z)+0.38'."\n";
+                print POINT 'C(x,y,z) = 0.2*f(x,y,z)+1.0'."\n";
+                print POINT ''."\n";
+                print POINT 'set palette cubehelix start 0.5 cycles -1.5 saturation 3'."\n";
+                print POINT ''."\n";
+                print POINT 'set macro'."\n";
+                print POINT 'Hx = "rH*($1)"; Hy = "rH*($2)"; Hz = "rH*($3)"; H = "H($1,$2,$3)"'."\n";
+                print POINT 'Ox = "rO*($1)"; Oy = "rO*($2)"; Oz = "rO*($3)"; O = "O($1,$2,$3)"'."\n";
+                print POINT 'Cx = "rC*($1)"; Cy = "rC*($2)"; Cz = "rC*($3)"; C = "C($1,$2,$3)"'."\n";
+                print POINT "rO = $rO"."\n";
+                print POINT "rC = $rC"."\n";
+                print POINT "rH = $rH"."\n";
+                print POINT 'se ticslevel 0'."\n";
+		print POINT 'se view equal xyz'."\n";
+		#print POINT "set size ratio -1\n";
+                print POINT "se view 90, 0, 1, 1 \n";
+                print POINT "splot \\"."\n";
+	}
+
+	#################################################################
+	
+
+
         for (my $j = $extra_line; $j < $Number_of_atoms + $extra_line; $j++){
         	my @data = split(/\s+/, $lines[$var + $j]);
         	if ($data[0] eq "O"){
@@ -124,6 +218,12 @@ for (my $i = 0; $i < $STEP; $i++){
 			$O_y = $y;
 			$O_z = $z;
 
+			if ($atom_plot == 1){
+				print POINT "sphere u (@".
+                                	$data[0]."x+ ".($x)."):(@".
+                                	$data[0]."y+ ".($y)."):(@".
+                                	$data[0]."z+ ".($z)."):(@".$data[0].') w pm3d , \\'."\n";
+			}
                         #print $data[0]."  ".$x."  ".$y."  ".$z."\n";
 		} elsif ($data[0] eq "H" && $data[2] == 0){
 			my $x = $data[1] - $move_x;
@@ -157,6 +257,12 @@ for (my $i = 0; $i < $STEP; $i++){
 			$H_x = $x;
 			$H_y = $y;
 			$H_z = $z;
+			if ($atom_plot == 1){
+				print POINT "sphere u (@".
+                                	$data[0]."x+ ".($x)."):(@".
+                                	$data[0]."y+ ".($y)."):(@".
+                                	$data[0]."z+ ".($z)."):(@".$data[0].') w pm3d , \\'."\n";
+			}
 		} elsif ($data[0] eq "C"){
 			my $x = $data[1] - $move_x;
 	                my $y = $data[2] - $move_y;
@@ -192,6 +298,12 @@ for (my $i = 0; $i < $STEP; $i++){
 			$C_x = $x;
 			$C_y = $y;
 			$C_z = $z;
+			if ($atom_plot == 1){
+				print POINT "sphere u (@".
+                                	$data[0]."x+ ".($x)."):(@".
+                                	$data[0]."y+ ".($y)."):(@".
+                                	$data[0]."z+ ".($z)."):(@".$data[0].') w pm3d , \\'."\n";
+			}
 		} else {
 			my $x = $data[1] - $move_x;
                 	my $y = $data[2] - $move_y;
@@ -210,38 +322,40 @@ for (my $i = 0; $i < $STEP; $i++){
 			}
 			print OUT $data[0]."  ".sprintf("%9.6f", $x)."  ".
 			sprintf("%9.6f", $y)."  ".sprintf("%9.6f", $z)."\n";
+			if ($atom_plot == 1){
+				print POINT "sphere u (@".
+                                	$data[0]."x+ ".($x)."):(@".
+                                	$data[0]."y+ ".($y)."):(@".
+                                	$data[0]."z+ ".($z)."):(@".$data[0].') w pm3d , \\'."\n";
+			}
 		}
 	}
 	close(OUT);
-	my $file = "point/point".sprintf("%03d", $i).".dat";
-	open(POINT, ">", $file);
-	print POINT "H  ".sprintf("%9.6f", $H_x)."  ".sprintf("%9.6f", $H_y)."  ".sprintf("%9.6f", $H_z)."\n";
-	print POINT "C  ".sprintf("%9.6f", $C_x)."  ".sprintf("%9.6f", $C_y)."  ".sprintf("%9.6f", $C_z)."\n";
-	print POINT "O  ".sprintf("%9.6f", $O_x)."  ".sprintf("%9.6f", $O_y)."  ".sprintf("%9.6f", $O_z)."\n\n";
-	close(POINT);
+	#my $file = "point/point".sprintf("%03d", $i).".dat";
+	#open(POINT, ">", $file);
+	#print POINT "H  ".sprintf("%9.6f", $H_x)."  ".sprintf("%9.6f", $H_y)."  ".sprintf("%9.6f", $H_z)."\n";
+	#print POINT "C  ".sprintf("%9.6f", $C_x)."  ".sprintf("%9.6f", $C_y)."  ".sprintf("%9.6f", $C_z)."\n";
+	#print POINT "O  ".sprintf("%9.6f", $O_x)."  ".sprintf("%9.6f", $O_y)."  ".sprintf("%9.6f", $O_z)."\n\n";
+	#close(POINT);
 
-	
-	my $file = "point_plt/atom_triangle/point".sprintf("%03d", $i).".plt";
-	open(POINT, ">", $file);
-	if ($output == 2){
-		print POINT "set terminal pdfcairo\n";
-		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
-	}
+
+
+
+	###############         make plt          ##################
 	print POINT "\n";
-	if ($normalization == 1){
-		print POINT "set xr[-2:2]\n";
-		print POINT "set yr[-2:2]\n";
-	} else {
-		print POINT "set xr[-2:2]\n";
-                print POINT "set yr[-2:$yrange_max]\n";
-	}
-	print POINT "set xtics -1 ,1 , 2\n";
 	print POINT "set arrow 1 from ".sprintf("%9.6f", $H_x).", ".sprintf("%9.6f", $H_z)." to ".sprintf("%9.6f", $C_x).", ".sprintf("%9.6f", $C_z)." nohead linestyle 2 lc \"green\"\n";
 	print POINT "set arrow 2 from ".sprintf("%9.6f", $H_x).", ".sprintf("%9.6f", $H_z)." to ".sprintf("%9.6f", $O_x).", ".sprintf("%9.6f", $O_z)." nohead linestyle 2 lc \"green\"\n";
 	print POINT "set arrow 3 from ".sprintf("%9.6f", $C_x).", ".sprintf("%9.6f", $C_z)." to ".sprintf("%9.6f", $O_x).", ".sprintf("%9.6f", $O_z)." nohead linestyle 2 lc \"green\"\n";
 	print POINT "unset key\n";
 	print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $H_x).", ".sprintf("%9.6f", $H_z).") pt 7 lc \"green\" title \"atom\"\n";
 	close(POINT);
+	#############################################################
+
+
+
+
+
+
 	if ($output == 2){
  		system("gnuplot $file");
 		system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
@@ -376,7 +490,8 @@ for (my $i = 0; $i < $STEP; $i++){
 	#print PLT "set terminal pdfcairo\n";
 	#print PLT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
 	print PLT "file = \"C_test/STEP$i.dat\"\n";
-	print PLT "set title \"STEP$i\"\n";
+	#print PLT "set title \"STEP$i\"\n";
+	print PLT "set title \"$title[$i]\"\n";
 	print PLT "set polar\n";
 	print PLT "set angles degree\n";
 	#print PLT "set xr[-0.002:0.002]\n";
@@ -509,7 +624,8 @@ for (my $i = 0; $i < $STEP; $i++){
 	#	print PLT "set terminal pdfcairo\n";
 	#	print PLT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
 	print PLT "file = \"O_test/STEP$i.dat\"\n";
-	print PLT "set title \"STEP$i\"\n";
+	#print PLT "set title \"STEP$i\"\n";
+	print PLT "set title \"$title[$i]\"\n";
 	print PLT "set polar\n";
 	print PLT "set angles degree\n";
 	print PLT "set xr[$xrange[0]:$xrange[1]]\n";
@@ -739,7 +855,8 @@ sub triangle{
 	        open(POINT, ">", $file);
 		print POINT "file_O = \"O_test/STEP$i.dat\"\n";
 		print POINT "file_C = \"C_test/STEP$i.dat\"\n";
-		print POINT "set title \"STEP-$i\"\n";
+		#print POINT "set title \"STEP-$i\"\n";
+		print POINT "set title \"$title[$i]\"\n";
 		print POINT "set terminal pdfcairo\n";
 		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
 	        print POINT "\n";
@@ -943,20 +1060,29 @@ sub brode_triangle {
 		print POINT "file_C = \"C_test/STEP$i.dat\"\n";
 		print POINT "file_O_diff = \"O_test/STEP$i\_diff.dat\"\n";
 		print POINT "file_C_diff = \"C_test/STEP$i\_diff.dat\"\n";
-		print POINT "set title \"STEP-$i\"\n";
 		print POINT "set terminal pdfcairo\n";
 		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
+		print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
+		print POINT "reset\n";
 		print POINT "\n";
+		#print POINT "set title \"STEP-$i\"\n";
+		print POINT "set title \"$title[$i]\"\n";
 		print POINT "set size ratio -1\n";
+		print POINT "set xtics -1 ,1 , 2\n";
 		#print POINT "set size square\n";
 		if ($normalization == 1){
+			print POINT "unset xtics\n";
+			print POINT "unset ytics\n";
+			print POINT "unset rtics\n";
 			print POINT "set xr[-2:2]\n";
 	        	print POINT "set yr[-2:2]\n";
 		} else {
+			print POINT "unset xtics\n";
+			print POINT "unset ytics\n";
+			print POINT "unset rtics\n";
 			print POINT "set xr[-2:2]\n";
                         print POINT "set yr[-2:$yrange_max]\n";
 		}
-		print POINT "set xtics -1 ,1 , 2\n";
 		print POINT "pi = 3.1415 \n";
 	        print POINT "unset key\n";
 		if ($CH_peak_theta - $OH_peak_theta < 0){
@@ -1012,7 +1138,6 @@ sub brode_triangle {
 			"((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
 			"((\$3/$scale_O) * cos((\$1/180) * pi)) w l\n";
 		#print POINT "reset\n";
-		print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
 	        close(POINT);
 	        if ($output == 3){
 	                system("gnuplot $file");
@@ -1056,4 +1181,49 @@ sub input_parameter {
 			$peak_wide = $1;
 		}
 	}
+}
+
+sub option{
+	if (my ($result) = grep { $ARGV[$_] eq '-help' } 0 .. $#ARGV) {
+                print "movie.pl program make atom and spectra movie.\n";
+                print "--------------------------------------------------------------------------\n";
+                print "options\n";
+		#print "  -o [filename]   |name output file\n";
+                print "  -norma          |atom distance normalize\n";
+                print "  -version, -v    |display version information\n";
+                print "  -help           |show help\n";
+                exit(0);
+        }
+
+	if (my ($result) = grep { $ARGV[$_] eq '-version' || $ARGV[$_] eq '-v' } 0 .. $#ARGV) {
+                print "movie.pl 1.0.0\n";
+                exit(0);
+        }
+
+	#if (my ($result) = grep { $ARGV[$_] eq '-o' } 0 .. $#ARGV) {
+	#        if ($ARGV[$result + 1]) {
+	#                $output_file = $ARGV[$result + 1];
+	#                splice(@ARGV, $result, 2);
+	#        } else {
+	#                print "Please enter output file name.\n";
+	#                exit(1);
+	#        }
+	#}
+
+	if (my ($result) = grep { $ARGV[$_] eq '-norma' } 0 .. $#ARGV) {
+		$normalization = 1;
+	        splice(@ARGV, $result, 1);
+	}
+	
+	if (my ($result) = grep { $ARGV[$_] eq '-atomplt' } 0 .. $#ARGV) {
+		$atom_plot = 1;
+	        splice(@ARGV, $result, 1);
+	}
+	
+        if (@ARGV == 1){
+                $input_file = $ARGV[0];
+        } elsif (@ARGV != 0) {
+                print "Please chack option.\n";
+                exit(1);
+        }
 }
