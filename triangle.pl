@@ -64,6 +64,8 @@ if ($C_energy == 2500){
 	#@xrange = (-0.2, 0.2);
 	#@yrange = (-0.2, 0.2);
 	$scale_C = 0.1; #2021-02-04
+} elsif ($C_energy == 348) {
+	$scale_C = 0.03; #2021-02-04
 } elsif ($C_energy == 1000) {
 	#@xrange = (-0.2, 0.2);
 	#@yrange = (-0.2, 0.2);
@@ -1241,7 +1243,7 @@ sub input_parameter {
                 }
                 if ($line =~ /^peak_wide/){
                         $line =~ /peak_wide="(.*)"/;
-						&in_para_check($1, "peak_wide");
+						#&in_para_check($1, "peak_wide");
                         $peak_wide = $1;
                 }
                 if ($line =~ /^peak_wide_C/){
