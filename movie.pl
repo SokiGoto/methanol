@@ -183,11 +183,11 @@ sub check_range{
 	                        	my $zmin = $data[3] - $r_max;
 				}
 		        	if ($data[1] + $r_max > $xmax) {$xmax = $data[1] + $r_max}
-	                	if ($data[1] - $r_max < $xmin) {$xmin = $data[1] - $r_max}
-	                	if ($data[2] + $r_max > $ymax) {$ymax = $data[2] + $r_max}
-	                	if ($data[2] - $r_max < $ymin) {$ymin = $data[2] - $r_max}
-	                	if ($data[3] + $r_max > $zmax) {$zmax = $data[3] + $r_max}
-	                	if ($data[3] - $r_max < $zmin) {$zmin = $data[3] - $r_max}
+	                if ($data[1] - $r_max < $xmin) {$xmin = $data[1] - $r_max}
+	                if ($data[2] + $r_max > $ymax) {$ymax = $data[2] + $r_max}
+	                if ($data[2] - $r_max < $ymin) {$ymin = $data[2] - $r_max}
+	                if ($data[3] + $r_max > $zmax) {$zmax = $data[3] + $r_max}
+	                if ($data[3] - $r_max < $zmin) {$zmin = $data[3] - $r_max}
         	        }
         	}
 		$atom_max = max(abs($xmax),abs($zmax),abs($xmin),abs($zmin));
@@ -197,27 +197,28 @@ sub check_range{
 
 	if ($mode == 2 || $mode == 3){
 		for (my $i = 0; $i < $STEP; $i++) {
-                        if (!-d "plot-data"){
-                                print "You should run spec calculation.\n";
-                                exit(1);
-                        }
-                        open(CHECK, "<", "./plot-data/STEP$i.dat")or die $!;
-			my $r_max;
-                        while(my $line = <CHECK>){
-                                my @data = split(/\s+/, $line);
-                                #print "$data[0] : $data[1] : $data[2] : $data[3] : $data[4] : ".
-                                #       "$data[5] : $data[6] : $data[7] : $data[8] : $data[9]\n";
-                                my $check_scale = (($data[3]+$data[6]+$data[9])/3.0);
+			if (!-d "plot-data"){
+			        print "You should run spec calculation.\n";
+			        exit(1);
+			}
+			open(CHECK, "<", "./plot-data/STEP$i.dat")or die $!;
+			my $max_range;
+			while(my $line = <CHECK>){
+				my @data = split(/\s+/, $line);
+				#print "$data[0] : $data[1] : $data[2] : $data[3] : $data[4] : ".
+				#       "$data[5] : $data[6] : $data[7] : $data[8] : $data[9]\n";
+				my $check_scale = (($data[3]+$data[6]+$data[9])/3.0);
+
 				#print "$check_scale\n";
-				if ($check_scale > $r_max){
+				if ($check_scale > $max_range){
 					#print "$i $data[1] $data[2]\n";
 					#print "$check_scale\n";
-					$r_max = $check_scale;
+					$max_range = $check_scale;
 				}
-                        }
-			$scale = $atom_max/$r_max;
-			$cbrmax = $r_max*$scale*2.5;
-                }
+			}
+			$scale = $atom_max/$max_range;
+			$cbrmax = $max_range*$scale*2.5;
+		}
 		#print "$cbrmax\n";
 		for (my $i = 0; $i < $STEP; $i++) {
 			if (!-d "plot-data"){
