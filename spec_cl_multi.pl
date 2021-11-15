@@ -7,7 +7,7 @@ my $cd = getcwd;
 my $energy;
 my $ELUM;
 my $spec;
-my $multi = 3;
+my $multi = 1;
 
 my $specplot_path = "~/PROGRAM/MsSpec/spec_2019Mar/spec/res/treatment/specplot";
 
@@ -25,10 +25,27 @@ while (1){
 	$STEP = $STEP + 1;
 }
 
-
-
 my $multi_STEP = int($STEP/$multi);
 my $multi_mod  = $STEP % $multi;
+
+my @multi_se_list;
+for (my $i = 0; $i < $multi; $i++){
+	my $diff = $multi_STEP;
+	if ($i < $multi_mod and $multi_mod != 0) {
+		if ($i == 0) {
+			push(@multi_se_list, [0, $diff + 1]);
+		} else {
+			push(@multi_se_list, [$multi_se_list[$i-1][1], $multi_se_list[$i-1][1] + $diff + 1]);
+		}
+	} else {
+		if ($i == 0) {
+            push(@multi_se_list, [0, $diff]);
+        } else {
+            push(@multi_se_list, [$multi_se_list[$i-1][1], $multi_se_list[$i-1][1] + $diff]);
+        }
+	}
+}
+
 
 my @pids;
 for (my $i = 0; $i < $multi; $i++ ) {
@@ -57,15 +74,12 @@ print STDERR "finish\n";
 ########################################################
 
 sub process{my ($process_num) = @_;
-	my $for_start = $process_num*$multi_STEP;
-	my $for_end   = ($process_num+1)*$multi_STEP;
-	if ($process_num == ($multi-1)){
-		$for_end = ($process_num+1)*$multi_STEP + $multi_mod;
-	}
+	my $for_start = $multi_se_list[$process_num][0];
+	my $for_end   = $multi_se_list[$process_num][1];
 
 	my $print_end = $for_end-1;
-        print STDERR "subprocess $process_num start : $for_start ~ $print_end\n";
-	for (my $i = $process_num*$multi_STEP; $i < $for_end; $i++){
+    print STDERR "subprocess $process_num start : $for_start ~ $print_end\n";
+	for (my $i = $for_start; $i < $for_end; $i++){
 		our $spec_cldir_path = "$cd/STEP$i/spec";
 		if (-d "$spec_cldir_path"){
 			system("rm -r $spec_cldir_path");
