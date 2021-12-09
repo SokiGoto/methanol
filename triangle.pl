@@ -38,6 +38,7 @@ my @title;
 my $output = 3;
 my $normalization = 0;
 my $atom_plot = 0;
+my $average = 0;
 my $diff = 0;
 
 my @xrange = (-5, 5);
@@ -55,7 +56,8 @@ if ($C_energy == 2500){
 	#@yrange = (-0.0015, 0.0015);
 	#$scale_C = 0.0013; #2021-07-04
 	#$scale_O = 0.006; #2021-07-04
-	$scale_C = 0.001; #2021-02-04
+	#$scale_C = 0.001; #2021-02-04
+	$scale_C = 0.0006; #2021-02-04
 } elsif ($C_energy == 2748) {
 	#@xrange = (-0.0015, 0.0015);
 	#@yrange = (-0.0015, 0.0015);
@@ -72,17 +74,19 @@ if ($C_energy == 2500){
 	$scale_C = 0.008; #2021-02-04
 } elsif ($C_energy == 748) {
 	$scale_C = 0.01; #2021-02-04
+} elsif ($O_energy == 500) {
+	$scale_C = 0.015;
 }
 if ($O_energy == 2500){
 	#@xrange = (-0.0015, 0.0015);
 	#@yrange = (-0.0015, 0.0015);
 	#$scale_C = 0.0013; #2021-07-04
 	#$scale_O = 0.006; #2021-07-04
-	$scale_O = 0.004; #2021-02-04
+	$scale_O = 0.0025; #2021-02-04
 } elsif ($O_energy == 100) {
 	#@xrange = (-0.2, 0.2);
 	#@yrange = (-0.2, 0.2);
-	$scale_O = 0.1;
+	$scale_O = 0.07;
 } elsif ($O_energy == 1000) {
 	#@xrange = (-0.2, 0.2);
 	#@yrange = (-0.2, 0.2);
@@ -411,6 +415,8 @@ for (my $i = 0; $i < $STEP; $i++){
 	my $HO_r = sqrt($HO[0]*$HO[0] + $HO[1]*$HO[1] + $HO[2]*$HO[2]);
 	my $HC_r = sqrt($HC[0]*$HC[0] + $HC[1]*$HC[1] + $HC[2]*$HC[2]);
 	my $HOHC = $HO[0]*$HC[0] + $HO[1]*$HC[1] + $HO[2]*$HC[2];
+	#print "$HO[0]*$HO[0] + $HO[1]*$HO[1] + $HO[2]*$HO[2]\\n";
+	#print "$i  $HO_r  $HC_r\n";
 	my $theta12_ = rad2deg(acos(($HOHC)/($HO_r*$HC_r)));
 	$theta12 = acos(($HC[0]*$HO[0] + $HC[1]*$HO[1] + $HC[2]*$HO[2])/(sqrt($HC[0]*$HC[0] + $HC[1]*$HC[1] + $HC[2]*$HC[2])*sqrt($HO[0]*$HO[0] + $HO[1]*$HO[1] + $HO[2]*$HO[2])));
 	print OUT sprintf("%3d", $i)."  ".sprintf("%9.6f", $theta12_)."\n";
@@ -479,14 +485,20 @@ for(my $i = 0; $i < $STEP; $i++){
 		my $line = $lines[$j*362];
 		#chomp($line);
 		#print "$line\n";
-                my @line_split = split(/\s+/, $line);
-		$data[$i][$j][1] = $line_split[1];
-                $data[$i][$j][2] = $line_split[2];
-                $data[$i][$j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
-		#print "@line_split\n";
-		#print "$data[$i][$j][3]\n";
-		#print OUT $lines[$j*362];
-                #print OUT $lines[180 + $j*362]."\n";
+			my @line_split = split(/\s+/, $line);
+			if ($average == 0) {
+				$data[$i][$j][1] = $line_split[1];
+				$data[$i][$j][2] = $line_split[2];
+				$data[$i][$j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
+			} elsif ($average == 1) {
+				$data[$i][$j][1] = $line_split[0];
+				$data[$i][$j][2] = $line_split[1];
+				$data[$i][$j][3] = $line_split[2];
+			}
+			#print "@line_split\n";
+			#print "$data[$i][$j][3]\n";
+			#print OUT $lines[$j*362];
+			#print OUT $lines[180 + $j*362]."\n";
         }
         print OUT "\n";
         for(my $j = 0; $j <= 180; $j++){
@@ -495,9 +507,15 @@ for(my $i = 0; $i < $STEP; $i++){
 			#chomp($line);
 			#print "$line\n";
             my @line_split = split(/\s+/, $line);
-            $data[$i][180 + $j][1] = $line_split[1];
-            $data[$i][180 + $j][2] = $line_split[2];
-            $data[$i][180 + $j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
+			if ($average == 0) {
+            	$data[$i][180 + $j][1] = $line_split[1];
+            	$data[$i][180 + $j][2] = $line_split[2];
+            	$data[$i][180 + $j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
+			} elsif ($average == 1) {
+				$data[$i][180 + $j][1] = $line_split[0];
+				$data[$i][180 + $j][2] = $line_split[1];
+				$data[$i][180 + $j][3] = $line_split[2];
+			}
 		#print "@line_split\n"
         }
         close(IN);
@@ -613,26 +631,37 @@ for(my $i = 0; $i < $STEP; $i++){
 		my $line = $lines[$j*362];
 		#chomp($line);
 		#print "$line\n";
-                my @line_split = split(/\s+/, $line);
-		$data[$i][$j][1] = $line_split[1];
-                $data[$i][$j][2] = $line_split[2];
-                $data[$i][$j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3;
-		#print "@line_split\n";
-		#print "$data[$i][$j][3]\n";
-		#print OUT $lines[$j*362];
-                #print OUT $lines[180 + $j*362]."\n";
+			my @line_split = split(/\s+/, $line);
+			if ($average == 0) {
+				$data[$i][$j][1] = $line_split[1];
+				$data[$i][$j][2] = $line_split[2];
+				$data[$i][$j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
+			} elsif ($average == 1) {
+				$data[$i][$j][1] = $line_split[0];
+				$data[$i][$j][2] = $line_split[1];
+				$data[$i][$j][3] = $line_split[2];
+			}
+			#print "@line_split\n";
+			#print "$data[$i][$j][3]\n";
+			#print OUT $lines[$j*362];
+			#print OUT $lines[180 + $j*362]."\n";
         }
         print OUT "\n";
         for(my $j = 0; $j <= 180; $j++){
-		#my $line = $lines[-$j*362 - 2];
-		my $line = $lines[-$j*362-182];
-		#chomp($line);
-		#print "$line\n";
-                my @line_split = split(/\s+/, $line);
-                $data[$i][180 + $j][1] = $line_split[1];
-                $data[$i][180 + $j][2] = $line_split[2];
-                $data[$i][180 + $j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3;
-		#print "@line_split\n"
+			#my $line = $lines[-$j*362 - 2];
+			my $line = $lines[-$j*362-182];
+			#chomp($line);
+			#print "$line\n";
+            my @line_split = split(/\s+/, $line);
+			if ($average == 0) {
+            	$data[$i][180 + $j][1] = $line_split[1];
+            	$data[$i][180 + $j][2] = $line_split[2];
+            	$data[$i][180 + $j][3] = ($line_split[3] + $line_split[6] + $line_split[9])/3.0;
+			} elsif ($average == 1) {
+				$data[$i][180 + $j][1] = $line_split[0];
+				$data[$i][180 + $j][2] = $line_split[1];
+				$data[$i][180 + $j][3] = $line_split[2];
+			}
         }
         close(IN);
 
@@ -1000,7 +1029,7 @@ sub brode_triangle {
 		my $CH_peak_r = 0;
 		my $OH_peak_r = 0;
 	
-	
+		#print "@peak_C\n";	
 		my $peak_C_jlen = scalar(@{$peak_C[$i]});
 		my $theta_C;
 		my $theta_keep_C;
@@ -1099,7 +1128,52 @@ sub brode_triangle {
 		print POINT "file_C_diff = \"C_test/STEP$i\_diff.dat\"\n";
 		print POINT "set terminal pdfcairo\n";
 		print POINT "set output \"point_pdf/output-".sprintf("%03d", $i).".pdf\"\n";
-		print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
+		if ($average == 0) 	{
+			print POINT "load \"point_plt/atom_triangle/point".sprintf("%03d", $i).".plt\"\n";
+		} elsif ($average == 1) {
+			print POINT "reset\n";
+			print POINT "file = '../move_h_xyz/STEP$i.dat'\n";
+			print POINT "Delta = 0.4\n";
+			print POINT "\n";
+			print POINT "stats file u 2:4 nooutput\n";
+			print POINT "RowCount = STATS_records\n";
+			print POINT "array ColX[RowCount]\n";
+			print POINT "array ColY[RowCount]\n";
+			print POINT "array ColC[RowCount]\n";
+			print POINT "\n";
+			print POINT "do for [i=1:RowCount] {\n";
+			print POINT "	set table \$Dummy\n";
+			print POINT "    	plot file u (ColX[\$0+1]=\$2):(ColY[\$0+1]=\$4) with table\n";
+			print POINT "	unset table\n";
+			print POINT "}\n";
+			print POINT "\n";
+			print POINT "do for [i=1:RowCount] {\n";
+			print POINT "    x0 = ColX[i]\n";
+			print POINT "    y0 = ColY[i]\n";
+			print POINT "    set table \$Occurrences\n";
+			print POINT "		set yrange[0:1]\n";
+			print POINT "		set xr[STATS_min_x:STATS_max_x]\n";
+			#print POINT "		set xy[STATS_min_y:STATS_max_y]\n";
+			print POINT "       plot file u ((abs(x0-\$2)<Delta) & (abs(y0-\$4)<Delta) ? 1 : 0):(1) smooth frequency\n";
+			print POINT "    unset table\n";
+			print POINT "    set table \$Dummmy\n";
+			print POINT "		set yr[0:1]\n";
+			#print POINT "		set xr[STATS_min_x:STATS_max_x]\n";
+			#print POINT "		set xy[STATS_min_y:STATS_max_y]\n";
+			print POINT "    	plot \$Occurrences u (\$1 == 1 ? c0=\$2 : \$2):(\$0) with table\n";
+			print POINT "    unset table\n";
+			print POINT "    ColC[i] = c0\n";
+			print POINT "}\n";
+			print POINT "\n";
+			print POINT "set print \$Data\n";
+			print POINT "do for [i=RowCount:1:-1] {\n";
+			print POINT '    print sprintf("%g\t\%g\t%g",ColX[i],ColY[i],ColC[i])'."\n";
+			print POINT "}\n";
+			print POINT "\n";
+			#print POINT "set xrange[-2:2]\n";
+			#print POINT "set zrange[-2:2]\n";
+			#print POINT "set view 90, 0\n";
+		}
 		print POINT "reset\n";
 		print POINT "\n";
 		#print POINT "set title \"STEP-$i\"\n";
@@ -1122,7 +1196,23 @@ sub brode_triangle {
         	print POINT "set yr[-2:$yrange_max]\n";
 		}
 		print POINT "pi = 3.1415 \n";
-	        print POINT "unset key\n";
+		print POINT "unset key\n";
+		#print POINT "stats file_C u (\$3 * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
+		#    "(\$3 * cos((\$1/180) * pi)) + $save_C[$i][2]) nooutput"
+	    print POINT "plot file_C u ".
+			"(((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
+			"(((\$3/$scale_C) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l lc \"blue\"\n";
+	    print POINT "replot file_O u ".
+			"((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
+			"((\$3/$scale_O) * cos((\$1/180) * pi)) w l lc \"red\"\n";
+		if ($average == 1) {
+			print POINT "set cbrange[0:RowCount]\n";
+			print POINT "set palette rgb 33,13,10\n";
+			print POINT "unset colorbox\n";
+			print POINT "\n";
+			print POINT "replot \$Data u 1:2:3 w p ps 0.2 pt 7 lc palette z notitle\n";
+		};
+
 		if ($CH_peak_theta - $OH_peak_theta <= 0){
 			print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
                         	" to ".sprintf("%9.6f", $x_O).", ".sprintf("%9.6f", $z_O).
@@ -1131,6 +1221,10 @@ sub brode_triangle {
 			print POINT "set arrow 2 from ".sprintf("%9.6f", $save_C[$i][0]).", ".
 				sprintf("%9.6f", $save_C[$i][2])." to ".sprintf("%9.6f", $x_C).", ".
 				sprintf("%9.6f", $z_C)." nohead linestyle 2 lc \"purple\"\n";
+
+	    	print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+				" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
+				" nohead linestyle 2 lc \"purple\"\n";
 		} else {
 			my $intersection_x = 0 + ($x_O - 0) * $S1 / ($S1 + $S2);
 			my $intersection_y = 0 + ($z_O - 0) * $S1 / ($S1 + $S2);
@@ -1146,8 +1240,8 @@ sub brode_triangle {
 				sprintf("%9.6f", $save_C[$i][2])." to ".sprintf("%9.6f", $intersection_x).
 				", ".sprintf("%9.6f", $intersection_y)." nohead linestyle 2 lc \"purple\"\n";
 
-	        print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
-				", ".sprintf("%9.6f", $intersection_y).") pt 7 title \"spectra\"\n";
+	        print POINT "replot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
+				", ".sprintf("%9.6f", $intersection_y).") lc 'purple' pt 7 title \"spectra\"\n";
 		}
 		
 			#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_O).
@@ -1162,21 +1256,16 @@ sub brode_triangle {
 		#print POINT "plot file_C_diff w l\n";
 		#print POINT "plot file_O_diff w l\n";
 		if ($diff == 1){
-		        print POINT "plot file_C_diff u ".
+		        print POINT "replot file_C_diff u ".
 				"(((\$3/$scale_C + 0.5) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
 				"(((\$3/$scale_C + 0.5) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l lc \"blue\"\n";
-		        print POINT "plot file_O_diff u ".
+		        print POINT "replot file_O_diff u ".
 				"((\$3/$scale_O + 0.5) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
 				"((\$3/$scale_O + 0.5) * cos((\$1/180)*pi)) w l lc \"red\"\n";
 		}
 	
 		
-	    print POINT "plot file_C u ".
-			"(((\$3/$scale_C) * sin((\$1/180) * pi) * cos(\$2/180 * pi)) + $save_C[$i][0]):".
-			"(((\$3/$scale_C) * cos((\$1/180) * pi)) + $save_C[$i][2]) w l lc \"blue\"\n";
-	    print POINT "plot file_O u ".
-			"((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
-			"((\$3/$scale_O) * cos((\$1/180) * pi)) w l lc \"red\"\n";
+		print POINT "replot\n";
 		#print POINT "reset\n";
 	    close(POINT);
 	    if ($output == 3){
@@ -1246,14 +1335,14 @@ sub input_parameter {
 						#&in_para_check($1, "peak_wide");
                         $peak_wide = $1;
                 }
-                if ($line =~ /^peak_wide_C/){
-                        $line =~ /peak_wide_C="(.*)"/;
+                if ($line =~ /^C_peak_wide/){
+                        $line =~ /C_peak_wide="(.*)"/;
 						&in_para_check($1, "peak_wide_C");
                         $input_peak_wide_C = $1;
                         $peak_wide = 0;
                 }
-                if ($line =~ /^peak_wide_O/){
-                        $line =~ /peak_wide_O="(.*)"/;
+                if ($line =~ /^O_peak_wide/){
+                        $line =~ /O_peak_wide="(.*)"/;
 						&in_para_check($1, "peak_wide_O");
                         $input_peak_wide_O = $1;
                         $peak_wide = 0;
@@ -1287,6 +1376,7 @@ sub option{
                 print "options\n";
 		#print "  -o [filename]   |name output file\n";
                 print "  -norma          |atom distance normalize\n";
+                print "  -ave            |not plot atom triangle\n";
                 print "  -version, -v    |display version information\n";
                 print "  -help           |show help\n";
                 exit(0);
@@ -1309,6 +1399,11 @@ sub option{
 
 	if (my ($result) = grep { $ARGV[$_] eq '-norma' } 0 .. $#ARGV) {
 		$normalization = 1;
+	        splice(@ARGV, $result, 1);
+	}
+	
+	if (my ($result) = grep { $ARGV[$_] eq '-ave' } 0 .. $#ARGV) {
+		$average = 1;
 	        splice(@ARGV, $result, 1);
 	}
 	
