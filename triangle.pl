@@ -57,7 +57,7 @@ if ($C_energy == 2500){
 	#$scale_C = 0.0013; #2021-07-04
 	#$scale_O = 0.006; #2021-07-04
 	#$scale_C = 0.001; #2021-02-04
-	$scale_C = 0.0006; #2021-02-04
+	$scale_C = 0.0006 #2021-02-04
 } elsif ($C_energy == 2748) {
 	#@xrange = (-0.0015, 0.0015);
 	#@yrange = (-0.0015, 0.0015);
@@ -1154,7 +1154,7 @@ sub brode_triangle {
 			print POINT "		set yrange[0:1]\n";
 			print POINT "		set xr[STATS_min_x:STATS_max_x]\n";
 			#print POINT "		set xy[STATS_min_y:STATS_max_y]\n";
-			print POINT "       plot file u ((abs(x0-\$2)<Delta) & (abs(y0-\$4)<Delta) ? 1 : 0):(1) smooth frequency\n";
+			print POINT "       plot file u (sqrt((x0-\$2) ** 2 + (y0-\$4) ** 2) < Delta ? 1 : 0):(1) smooth frequency\n";
 			print POINT "    unset table\n";
 			print POINT "    set table \$Dummmy\n";
 			print POINT "		set yr[0:1]\n";
