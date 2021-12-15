@@ -14,9 +14,10 @@ my $ymin;
 my $zmax;
 my $zmin;
 my $rmax;
+#my $gnuplot = "gnuplot";
+#my $gnuplot = "/opt/gnuplot/5.4.2/bin/gnuplot";
 #my $gnuplot = "/opt/gnuplot/4.6.1/bin/gnuplot";
-my $gnuplot = "gnuplot";
-my $gnuplot = "/opt/gnuplot/5.4.2/bin/gnuplot";
+my $gnuplot = "/opt/gnuplot/5.0.5/bin/gnuplot";
 
 if(-d "2d-plot-data"){system("rm -r 2d-plot-data")};mkdir("2d-plot-data");
 if(-d "2d-pdf"){system("rm -r 2d-pdf")};mkdir("2d-pdf");
@@ -164,8 +165,8 @@ for(my $i = 0; $i < $STEP; $i++){
 		print GNU_OUT "plot file u (\$2!=180 ? -\$1+90 : \$1+90):(scale*(\$3+\$6+\$9)/3.0) w l\n";
 	} elsif ($average == 1) {
 		print GNU_OUT "plot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w line lc \"black\"\n";
-		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc below r=".sprintf("%.6f",$radii/$rmax - 0.001)." lc \"blue\" notitle\n";
-		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc above r=".sprintf("%.6f",$radii/$rmax + 0.001)." lc \"red\" notitle\n";
+		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc below r=".sprintf("%.6f",$radii/$rmax)." lc \"blue\" notitle\n";
+		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc above r=".sprintf("%.6f",$radii/$rmax)." lc \"red\" notitle\n";
 		#print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc closed lc \"red\" notitle\n";
 
 

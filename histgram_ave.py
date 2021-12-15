@@ -6,11 +6,27 @@ import math
 import numpy as np
 import subprocess
 
+import option
+
+#structure_file, energy, spec, lmax_mode, lmax, elum, absorbing_atom = option.subroutine.option("input_methanol.txt")
+#print("structure_file : ", structure_file)
+#print("energy         : ", energy)
+#print("spec           : ", spec)
+#print("lmax_mode      : ", lmax_mode)
+#print("lmax           : ", lmax)
+#print("elum           : ", elum)
+#print("absorbing_atom : ", absorbing_atom)
+#exit()
+
 line_len = 8
 #tri_sin = "triplet"
 
-directorys = glob.glob("0*/")
+#directorys = glob.glob("0*/")
+#directorys = ["0725","0530","0121","0894","0356","0642","0843","0567","0298","0284","0503","0060","0239","0641","0973","0991","0467","0792","0277","0922","0376","0727","0282","0476","0139","0130","0459","0891","0268","0138","0885","0513","0523","0851","0830","0152","0052","0142","0697"]
+#directorys = ["0044", "0131", "0152", "0196", "0340", "0351", "0357", "0462", "0476", "0503", "0513", "0523", "0806", "0885", "0922"]
+directorys = option.average_torajectry()
 root_dir = os.getcwd()
+print(directorys)
 
 #output_file = root_dir + "/plane_OH_ang_before.dat"
 #f_poa_b = open(output_file, mode = "w")

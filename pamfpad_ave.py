@@ -5,7 +5,12 @@ import sys
 import glob
 import subprocess
 
-directorys = glob.glob("0*/")
+import option
+
+#directorys = glob.glob("0*/")
+
+directorys = option.average_torajectry()
+print(directorys)
 
 root_dir = os.getcwd()
 absort_atom_li = ["O", "C"]
@@ -20,6 +25,8 @@ for absort_atom in absort_atom_li:
         count_read = [0 for i in range(101)]
         for directory in directorys:
             check_step = glob.glob(directory + absort_atom + "_" + energy + "eV/" + "STEP*/")
+            #print(check_step)
+            #exit()
             num = 0
             for check in check_step:
                 #print(check)
@@ -54,7 +61,7 @@ for absort_atom in absort_atom_li:
                     #print(ave_data[i][count])
                     count += 1
             for i in range(101):
-                print(ave_data[i][0])
+                #print(ave_data[i][0])
                 if count_read[i] != 0:
                     print((ave_data[i][0][2]) / count_read[i])
                 print(count_read[i])

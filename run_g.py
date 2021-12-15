@@ -5,14 +5,27 @@ import glob
 import numpy as np
 import subprocess
 
+import option
+
 line_len = 8
-#tri_sin = "triplet"
 
 root_dir = os.getcwd()
-p = re.compile(".*/(.*)$")
-res = p.match(root_dir)
-tri_sin = res.group(1)
-files = glob.glob("../input/"+tri_sin+"/*.xyz")
+p = re.compile(".*/([singlet|triplet].*)/.*")
+res = p.findall(root_dir)
+tri_sin = res[0]
+#files = glob.glob("../input/"+tri_sin+"/*.xyz")
+
+cmd = "mkdir -p " + root_dir + "/pamfpad_ave/move_h_xyz/"
+subprocess.run(cmd, shell=True)
+cmd = "mkdir -p " + root_dir + "/pamfpad_ave/input/"
+subprocess.run(cmd, shell=True)
+cmd = "mkdir -p " + root_dir + "/n_OH_ang/"
+subprocess.run(cmd, shell=True)
+
+#input_para = option.input_parameter()
+#exit()
+files = option.average_torajectry()
+print(files)
 
 #output_file = root_dir + "/plane_OH_ang_before.dat"
 #with open(output_file, mode = "w") as f:
@@ -27,13 +40,13 @@ files = glob.glob("../input/"+tri_sin+"/*.xyz")
 #with open(output_file, mode = "w") as f:
 #    f.write("")
 
-output_file = root_dir + "/plane_OH_ang_before.dat"
+output_file = root_dir + "/n_OH_ang/plane_OH_ang_before.dat"
 f_poa_b = open(output_file, mode = "w")
-output_file = root_dir + "/plane_OH_ang_after.dat"
+output_file = root_dir + "/n_OH_ang/plane_OH_ang_after.dat"
 f_poa_a = open(output_file, mode = "w")
-output_file = root_dir + "/plane_OH_ang_chenge.dat"
+output_file = root_dir + "/n_OH_ang/plane_OH_ang_chenge.dat"
 f_poa_c = open(output_file, mode = "w")
-output_file = root_dir + "/plane_OH_ang.dat"
+output_file = root_dir + "/n_OH_ang/plane_OH_ang.dat"
 f_poa = open(output_file, mode = "w")
 f_moveh = []
 for i in range(101):
@@ -53,30 +66,15 @@ H3_sum = [[0 for _ in range(3)] for _ in range(101)]
 
 data = [[] for i in range(101)]
 
-for file_name in files:
-    flag = 0
-    p = re.compile(".*/(.*).xyz")
-    res = p.match(file_name)
-    print(res.group(1))
-    check = res.group(1)
-    cmd = "mkdir " + res.group(1)
-    subprocess.run(cmd, shell = True)
-    cmd = "mkdir " + res.group(1) + "/input"
-    subprocess.run(cmd, shell = True)
-    os.chdir(res.group(1) + "/input")
-    cmd = "pwd"
-    subprocess.run(cmd, shell = True)
-    fi = "../../" + file_name
-    #cmd = "cp -rp " + fi + " ."
-    #subprocess.run(cmd, shell = True)
+for traj in files:
+    fi = "../../input/"+tri_sin+"/"+traj+".xyz"
     print(fi)
     with open(fi, mode = "r")as f:
         lines = f.readlines()
     loop = len(lines)//line_len
-    histogram = [0 for i in range(10)]
+    #histogram = [0 for i in range(10)]
     H = [[]for i in range(4)]
     G = [[]for i in range(3)]
-    print(fi)
     title= [[] for i in range(loop)]
     O    = [[] for i in range(loop)]
     C    = [[] for i in range(loop)]
@@ -87,7 +85,6 @@ for file_name in files:
     G[0] = [[] for i in range(loop)]
     G[1] = [[] for i in range(loop)]
     G[2] = [[] for i in range(loop)]
-    migrate_H = -1#[-1 for i in range(loop)]
     for i in range(loop):
         print("STEP" ,i)
         title[i] = lines[1 + i * line_len].replace('\n','').split()
@@ -98,44 +95,25 @@ for file_name in files:
         H[2][i]  = lines[5 + i * line_len].replace('\n','').split()
         H[3][i]  = lines[7 + i * line_len].replace('\n','').split()
 
-        #print(C)
-        #print(H[0])
-        #print(H[1])
-        #print(H[2])
-        #print(O)
-        #print(H[3])
         for j in range(3):
-            #print("H", float(H[j][i][1]), float(H[j][i][2]), float(H[j][i][3]))
-            #print("O", float(O[i][1]), float(O[i][2]), float(O[i][3]))
             radii = np.sqrt((float(H[j][i][1]) - float(O[i][1]))**2 + (float(H[j][i][2]) - float(O[i][2]))**2 + (float(H[j][i][3]) - float(O[i][3]))**2)
             c_fla = list(range(3))
-            print(radii)
+            #print(radii)
             if radii <= 1.1:
                 c_fla.pop(j)
                 c_fla.insert(0, -1)
                 c_fla = map(lambda x: x+2, c_fla)
                 c_fla = map(str, c_fla)
-                #migrate_H[i] = j
                 migrate_H = j
                 migrate_STEP = i
                 print("<= 1.1", j)
-                with open("Ethanol_rot_G.inp", mode = "w") as f_e:
-                    f_e.write(fi + "\n")
-                    f_e.write("coordinate_rotation3.XYZ\n")
-                    f_e.write("coordinate_rotation3_G.XYZ\n")
-                    f_e.write("6 3 2 1 0\n")
-                    f_e.write(" ".join(c_fla) + "\n")
-                    f_e.write("5 6\n")
-                    f_e.write(str(j+2) + "\n")
-                    f_e.write("0\n")
-                    flag = 1
                 break
         else:
             continue
         break
-    cmd = "~/PROGRAM/self_program/atom_rotation"
-    subprocess.run(cmd, shell = True)
-    with open("coordinate_rotation3_G.XYZ", mode = "r") as f:
+    fi = "../" + traj + "/input/coordinate_rotation3_G.XYZ"
+    print(fi)
+    with open(fi, mode = "r") as f:
         lines = f.readlines()
     for i in range(loop):
         #print("STEP" ,i)
@@ -149,7 +127,7 @@ for file_name in files:
         G[0][i]  = lines[8 + i * (line_len + 3)].replace('\n','').split()
         G[1][i]  = lines[9 + i * (line_len + 3)].replace('\n','').split()
         G[2][i]  = lines[10 + i * (line_len + 3)].replace('\n','').split()
-        f_moveh[i].write("{} {} {} {}\n".format(check, H[migrate_H][i][1], H[migrate_H][i][2], H[migrate_H][i][3]))
+        f_moveh[i].write("{} {} {} {}\n".format(traj, H[migrate_H][i][1], H[migrate_H][i][2], H[migrate_H][i][3]))
         for j in range(3):
             #print(O[i][j+1])
             O_sum[i][j]  += float(O[i][j+1])
@@ -222,17 +200,17 @@ for file_name in files:
             if j == 3:
                 if ang_deg < save:
                     save = ang_deg
-                    save_check = check
+                    save_check = traj
 
                 data[i].append(ang_deg)
             #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                f_poa.write("{} {} {}\n".format(i, ang_deg, check))
+                f_poa.write("{} {} {}\n".format(i, ang_deg, traj))
             if j == 3 and i <= migrate_STEP:
                 f_poa_b.write("{} {}\n".format(i, ang_deg))
             if j == 3 and i >= migrate_STEP:
                 f_poa_a.write("{} {}\n".format(i, ang_deg))
             if j == 3 and i == migrate_STEP:
-                f_poa_c.write("{} {} {}\n".format(i, ang_deg, check))
+                f_poa_c.write("{} {} {}\n".format(i, ang_deg, traj))
             #===============================================================        
             #    output_file = root_dir + "/plane_OH_ang.dat"
             #    with open(output_file, mode = "a") as f_pOa:
@@ -311,8 +289,8 @@ for file_name in files:
     
 
 
-    if check == "0742":
-        exit()
+    #if check == "0742":
+    #    exit()
 
     os.chdir(root_dir)
 
@@ -322,9 +300,9 @@ f_poa_c.close()
 f_poa.close()
 for i in range(101):
     f_moveh[i].close()
-with open("histogram.dat", mode="w") as f:
-    for i in range(10):
-        f.write("{}~{} {}\n".format(i*10, (i+1)*10, histogram[i]))
+#with open("./n_OH_ang/histogram.dat", mode="w") as f:
+#    for i in range(10):
+#        f.write("{}~{} {}\n".format(i*10, (i+1)*10, histogram[i]))
 
 # standard deviation
 sd = []
@@ -341,7 +319,7 @@ for i in range(101):
     sd.append([np.average(data[i]), np.std(data[i])])
     #sd.append([np.average(data[i]), std(data[i])])
 
-with open("sd.dat", mode = "w") as f:
+with open("./n_OH_ang/sd.dat", mode = "w") as f:
     for i in range(101):
         f.write("{} {}\n".format(i, sd[i][0]))
     f.write("\n")
@@ -382,7 +360,7 @@ H0_ave = [[0 for _ in range(3)] for _ in range(101)]
 H1_ave = [[0 for _ in range(3)] for _ in range(101)]
 H2_ave = [[0 for _ in range(3)] for _ in range(101)]
 H3_ave = [[0 for _ in range(3)] for _ in range(101)]
-for i in range(loop):
+for i in range(101):
     for j in range(3):
         O_ave[i][j] = O_sum[i][j] / float(len(files))
         C_ave[i][j] = C_sum[i][j] / float(len(files))
@@ -392,7 +370,7 @@ for i in range(loop):
         H3_ave[i][j] = H3_sum[i][j] / float(len(files))
 #os.mkdir("pamfpad_ave/input/")
 with open(root_dir+"/pamfpad_ave/input/ave_xyz.dat", mode = "w") as f:
-    for i in range(loop):
+    for i in range(101):
         f.write("{}\n".format(6))
         f.write("Step : {}\n".format(i * 10))
         f.write("C {} {} {}\n".format(C_ave[i][0], C_ave[i][1], C_ave[i][2]))

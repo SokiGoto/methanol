@@ -17,6 +17,10 @@ my $rO = 0.05794375693 * 4;
 my $rC = 0.06239214294 * 4;
 my $rH = 0.04555414633 * 4;
 
+
+### ImageMagick path
+my $IM = "/opt/imagemagick/7.1.0-17/magick";
+
 #my $energy = 100;
 
 my $C_energy;
@@ -40,6 +44,7 @@ my $normalization = 0;
 my $atom_plot = 0;
 my $average = 0;
 my $diff = 0;
+my $STEP;
 
 my @xrange = (-5, 5);
 my @yrange = (-2, 2);
@@ -396,7 +401,7 @@ for (my $i = 0; $i < $STEP; $i++){
 
 	if ($output == 2){
  		system("gnuplot $file");
-		system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
+		system("$IM -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
 	}
 
 	open(POINT_ALL, ">>", "point/point_all.dat");
@@ -425,7 +430,7 @@ for (my $i = 0; $i < $STEP; $i++){
 
 }
 if ($output == 2){
-	my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+	my $command_PNGtoGIF = "$IM -delay 100 ./point_png/output-*.png ./output/output_point.gif";
 	system($command_PNGtoGIF);
 	print "Finished png to gif.\n";
 	my $command_GIFtoMP4 = "ffmpeg -r 3 -i ./output/output_point.gif".
@@ -591,7 +596,7 @@ for (my $i = 0; $i < $STEP; $i++){
 	if($output == 1){
 		my $file = "point_plt/C/STEP$i.plt";
 		system("gnuplot $file");
-		system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).
+		system("$IM -density 300 point_pdf/output-".sprintf("%03d", $i).
 			".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
 	}
 	#=========================
@@ -600,7 +605,7 @@ for (my $i = 0; $i < $STEP; $i++){
 #========================================= movie output =======================================
 if ($output == 1){
 	if (-d "output"){rmtree("output")};mkdir("output");
-	my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+	my $command_PNGtoGIF = "$IM -delay 100 ./point_png/output-*.png ./output/output_point.gif";
 	system($command_PNGtoGIF);
 	print "Finished png to gif.\n";
 	
@@ -738,7 +743,7 @@ for (my $i = 0; $i < $STEP; $i++){
 	if($output == 1){
 		my $file = "point_plt/O/STEP$i.plt";
 		system("gnuplot $file");
-        	system("magick -density 300 point_pdf/output-".
+        	system("$IM -density 300 point_pdf/output-".
 			sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
 	}
 	#=========================
@@ -746,7 +751,7 @@ for (my $i = 0; $i < $STEP; $i++){
 
 #========================================= movie output =======================================
 if($output == 1){
-	my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+	my $command_PNGtoGIF = "$IM -delay 100 ./point_png/output-*.png ./output/output_point.gif";
 	system($command_PNGtoGIF);
 	print "Finished png to gif.\n";
 	
@@ -958,14 +963,14 @@ close(OUT);
 #	        close(POINT);
 #	        if ($output == 3){
 #	                system("gnuplot $file");
-#	                system("magick -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
+#	                system("$IM -density 300 point_pdf/output-".sprintf("%03d", $i).".pdf -layers flatten point_png/output-".sprintf("%03d", $i).".png");
 #		}
 #	
 #	
 #	}
 #	if ($output == 3){
 #		system("rm -rf ./output/spectra_triangle.mp4");
-#		my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+#		my $command_PNGtoGIF = "$IM -delay 100 ./point_png/output-*.png ./output/output_point.gif";
 #		system($command_PNGtoGIF);
 #		print "Finished png to gif.\n";
 #		my $command_GIFtoMP4 = "ffmpeg -r 3 -i ./output/output_point.gif".
@@ -1270,7 +1275,7 @@ sub brode_triangle {
 	    close(POINT);
 	    if ($output == 3){
 	    	system("gnuplot $file");
-	        system("magick -density 300 point_pdf/output-".
+	        system("$IM -density 300 point_pdf/output-".
 				sprintf("%03d", $i).".pdf -layers flatten point_png/output-".
 				sprintf("%03d", $i).".png");
 		}
@@ -1279,7 +1284,7 @@ sub brode_triangle {
 	}
 	if ($output == 3){
 		system("rm -rf ./output/spectra_triangle.mp4");
-		my $command_PNGtoGIF = "magick -delay 100 ./point_png/output-*.png ./output/output_point.gif";
+		my $command_PNGtoGIF = "$IM -delay 100 ./point_png/output-*.png ./output/output_point.gif";
 		system($command_PNGtoGIF);
 		print "Finished png to gif.\n";
 		my $command_GIFtoMP4 = "ffmpeg -r 3 -i ./output/output_point.gif".
@@ -1319,6 +1324,10 @@ sub input_parameter {
                 if ($line =~ /^structure_file/){
                         $line =~ /structure_file="(.*)"/;
                         $input_file = $1;
+                }
+                if ($line =~ /^step/){
+                        $line =~ /step="(.*)"/;
+                        $STEP = $1;
                 }
                 if ($line =~ /^C_energy/){
                         $line =~ /C_energy="(.*)"/;
