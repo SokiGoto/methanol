@@ -24,7 +24,7 @@ for absort_atom in absort_atom_li:
         ave_data = [[[0.0 for i in range(3)] for i in range(181*361)] for i in range(101)]
         count_read = [0 for i in range(101)]
         for directory in directorys:
-            check_step = glob.glob(directory + absort_atom + "_" + energy + "eV/" + "STEP*/")
+            check_step = glob.glob("../" + directory +"/" + absort_atom + "_" + energy + "eV/" + "STEP*/")
             #print(check_step)
             #exit()
             num = 0
@@ -38,7 +38,7 @@ for absort_atom in absort_atom_li:
                     num = step
             for i in range(num + 1):
                 count_read[i] += 1 
-                open_file = directory + absort_atom + "_" + energy + "eV/" + "plot-data/STEP" + str(i) + ".dat" 
+                open_file = "../" + directory + "/" + absort_atom + "_" + energy + "eV/" + "plot-data/STEP" + str(i) + ".dat" 
                 print(open_file)
                 with open(open_file, mode = "r") as f:
                     lines = f.readlines()
@@ -71,11 +71,11 @@ for absort_atom in absort_atom_li:
         #os.mkdir("./pamfpad_ave/")
         #os.mkdir("./pamfpad_ave/" + absort_atom + "_" + energy + "eV")
         #os.mkdir("./pamfpad_ave/" + absort_atom + "_" + energy + "eV/plot-dat/")
-        cmd = "mkdir -p " + "./pamfpad_ave/" + absort_atom + "_" + energy + "eV/plot-data/"
+        cmd = "mkdir -p " + "./" + absort_atom + "_" + energy + "eV/plot-data/"
         print(cmd)
         subprocess.run(cmd, shell=True)
         for i in range(101):
-            open_file = "./pamfpad_ave/" + absort_atom + "_" + energy + "eV/plot-data/STEP" + str(i) + ".dat"
+            open_file = "./" + absort_atom + "_" + energy + "eV/plot-data/STEP" + str(i) + ".dat"
             with open(open_file, mode = "w") as f:
                 count = 0
                 for j in range(181):

@@ -13,32 +13,20 @@ root_dir = os.getcwd()
 p = re.compile(".*/([singlet|triplet].*)/.*")
 res = p.findall(root_dir)
 tri_sin = res[0]
-#files = glob.glob("../input/"+tri_sin+"/*.xyz")
 
-cmd = "mkdir -p " + root_dir + "/pamfpad_ave/move_h_xyz/"
+cmd = "mkdir -p " + root_dir + "/move_h_xyz/"
 subprocess.run(cmd, shell=True)
-cmd = "mkdir -p " + root_dir + "/pamfpad_ave/input/"
+cmd = "mkdir -p " + root_dir + "/input/"
 subprocess.run(cmd, shell=True)
 cmd = "mkdir -p " + root_dir + "/n_OH_ang/"
+subprocess.run(cmd, shell=True)
+cmd = "mkdir -p " + root_dir + "/HOH_ang/"
 subprocess.run(cmd, shell=True)
 
 #input_para = option.input_parameter()
 #exit()
 files = option.average_torajectry()
 print(files)
-
-#output_file = root_dir + "/plane_OH_ang_before.dat"
-#with open(output_file, mode = "w") as f:
-#    f.write("")
-#output_file = root_dir + "/plane_OH_ang_after.dat"
-#with open(output_file, mode = "w") as f:
-#    f.write("")
-#output_file = root_dir + "/plane_OH_ang_chenge.dat"
-#with open(output_file, mode = "w") as f:
-#    f.write("")
-#output_file = root_dir + "/plane_OH_ang.dat"
-#with open(output_file, mode = "w") as f:
-#    f.write("")
 
 output_file = root_dir + "/n_OH_ang/plane_OH_ang_before.dat"
 f_poa_b = open(output_file, mode = "w")
@@ -48,9 +36,12 @@ output_file = root_dir + "/n_OH_ang/plane_OH_ang_chenge.dat"
 f_poa_c = open(output_file, mode = "w")
 output_file = root_dir + "/n_OH_ang/plane_OH_ang.dat"
 f_poa = open(output_file, mode = "w")
+
+f_HOH = open("./HOH_ang/HOH_ang.dat", mode = "w")
+
 f_moveh = []
 for i in range(101):
-    output_file = root_dir + "/pamfpad_ave/move_h_xyz/STEP"+str(i)+".dat"
+    output_file = root_dir + "/move_h_xyz/STEP"+str(i)+".dat"
     f_moveh.append(open(output_file, mode = "w"))
 
 save = 100
@@ -65,14 +56,14 @@ H2_sum = [[0 for _ in range(3)] for _ in range(101)]
 H3_sum = [[0 for _ in range(3)] for _ in range(101)]
 
 data = [[] for i in range(101)]
-
+HOH_li = [[] for i in range(101)] 
+cnt = 0
 for traj in files:
     fi = "../../input/"+tri_sin+"/"+traj+".xyz"
     print(fi)
     with open(fi, mode = "r")as f:
         lines = f.readlines()
     loop = len(lines)//line_len
-    #histogram = [0 for i in range(10)]
     H = [[]for i in range(4)]
     G = [[]for i in range(3)]
     title= [[] for i in range(loop)]
@@ -178,6 +169,22 @@ for traj in files:
         #print("pl", perpendicular_line[1], perpendicular_line[2], perpendicular_line[3])
         #print("OH", OH[migrate_H][1], OH[migrate_H][2], OH[migrate_H][3])
         #print("OC", OC[1], OC[2], OC[3])
+        
+        HOH_a = (OH[migrate_H][1] * OH[3][1] + \
+                OH[migrate_H][2] * OH[3][2] + \
+                OH[migrate_H][3] * OH[3][3])
+        HOH_b = (np.sqrt(OH[migrate_H][1] * OH[migrate_H][1] + \
+                OH[migrate_H][2] * OH[migrate_H][2] + \
+                OH[migrate_H][3] * OH[migrate_H][3]) \
+                * \
+                np.sqrt(OH[3][1] * OH[3][1] + \
+                OH[3][2] * OH[3][2] + \
+                OH[3][3] * OH[3][3]))
+
+        HOH_ang_acos = HOH_a / HOH_b
+        HOH_ang_deg = np.rad2deg(np.arccos(HOH_ang_acos))
+        HOH_li[i].append(HOH_ang_deg)
+        f_HOH.write("{:<3d} {:11.7f} {} {:2d}\n".format(i, HOH_ang_deg, traj, cnt))
 
         for j in range(4):
             a = (perpendicular_line[1] * OH[j][1] + \
@@ -196,7 +203,7 @@ for traj in files:
             #    ang_deg = 90 - ang_deg
             #elif 0 < ang_deg <= 180:
             #    ang_deg = ang_deg - 90
-            print(ang_acos, ang_deg)
+            #print(ang_acos, ang_deg)
             if j == 3:
                 if ang_deg < save:
                     save = ang_deg
@@ -251,6 +258,7 @@ for traj in files:
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     f_poa_a.write("\n")
     f_poa_b.write("\n")
+    f_HOH.write("\n")
     #=====================================================
     #output_file = root_dir + "/plane_OH_ang_after.dat"
     #with open(output_file, mode = "a") as f_pOa:
@@ -260,52 +268,20 @@ for traj in files:
     #with open(output_file, mode = "a") as f_pOa:
     #    f_pOa.write("\n")
     #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    
-
-    ## histogram
-    #for i in range(10):
-    #    if i * 10 <= migration_STEP < (i + 1) * 10:
-    #        histogram[i] += 1
-    #if 0  <= migrate_STEP < 10:
-    #    histogram[0] += 1
-    #if 10 <= migrate_STEP < 20:
-    #    histogram[1] += 1
-    #if 20 <= migrate_STEP < 30:
-    #    histogram[2] += 1
-    #if 30 <= migrate_STEP < 40:
-    #    histogram[3] += 1
-    #if 40 <= migrate_STEP < 50:
-    #    histogram[4] += 1
-    #if 50 <= migrate_STEP < 60:
-    #    histogram[5] += 1
-    #if 60 <= migrate_STEP < 70:
-    #    histogram[6] += 1
-    #if 70 <= migrate_STEP < 80:
-    #    histogram[7] += 1
-    #if 80 <= migrate_STEP < 90:
-    #    histogram[8] += 1
-    #if 90 <= migrate_STEP < 100:
-    #    histogram[9] += 1
-    
-
-
-    #if check == "0742":
-    #    exit()
-
+    cnt += 1 
     os.chdir(root_dir)
 
 f_poa_b.close()
 f_poa_a.close()
 f_poa_c.close()
 f_poa.close()
+f_HOH.close()
 for i in range(101):
     f_moveh[i].close()
-#with open("./n_OH_ang/histogram.dat", mode="w") as f:
-#    for i in range(10):
-#        f.write("{}~{} {}\n".format(i*10, (i+1)*10, histogram[i]))
 
 # standard deviation
 sd = []
+HOH_sd = []
 
 def std(li):
     length = len(li)
@@ -315,9 +291,28 @@ def std(li):
     return np.sqrt(sum(li_std)/length)
 
 
+
 for i in range(101):
     sd.append([np.average(data[i]), np.std(data[i])])
+    HOH_sd.append([np.average(HOH_li[i]), np.std(HOH_li[i])])
     #sd.append([np.average(data[i]), std(data[i])])
+
+with open("./HOH_ang/sd.dat", mode = "w") as f:
+    for i in range(101):
+        f.write("{} {}\n".format(i, HOH_sd[i][0]))
+    f.write("\n")
+    for i in range(101):
+        f.write("{} {}\n".format(i, HOH_sd[i][0] + HOH_sd[i][1]))
+    f.write("\n")
+    for i in range(101):
+        f.write("{} {}\n".format(i, HOH_sd[i][0] - HOH_sd[i][1]))
+    f.write("\n")
+    for i in range(101):
+        f.write("{} {}\n".format(i, HOH_sd[i][0] + 2 * HOH_sd[i][1]))
+    f.write("\n")
+    for i in range(101):
+        f.write("{} {}\n".format(i, HOH_sd[i][0] - 2 * HOH_sd[i][1]))
+    f.write("\n")
 
 with open("./n_OH_ang/sd.dat", mode = "w") as f:
     for i in range(101):
@@ -335,25 +330,8 @@ with open("./n_OH_ang/sd.dat", mode = "w") as f:
     for i in range(101):
         f.write("{} {}\n".format(i, sd[i][0] - 2 * sd[i][1]))
     f.write("\n")
-print(save, save_check)
+#print(save, save_check)
 
-
-#for i in range(loop):
-#    for j in range(3):
-#        #print(O[i][j+1])
-#        O_sum[j]  += float(O[i][j+1])
-#        C_sum[j]  += float(C[i][j+1])
-#        H0_sum[j] += float(H[0][i][j+1])
-#        H1_sum[j] += float(H[1][i][j+1])
-#        H2_sum[j] += float(H[2][i][j+1])
-#        H3_sum[j] += float(H[3][i][j+1])
-#        #O[i]     = lines[6 + i * (line_len + 3)].replace('\n','').split()
-#        #C[i]     = lines[2 + i * (line_len + 3)].replace('\n','').split()
-#        #H[0][i]  = lines[3 + i * (line_len + 3)].replace('\n','').split()
-#        #H[1][i]  = lines[4 + i * (line_len + 3)].replace('\n','').split()
-#        #H[2][i]  = lines[5 + i * (line_len + 3)].replace('\n','').split()
-#        #H[3][i]  = lines[7 + i * (line_len + 3)].replace('\n','').split()
-#
 O_ave  = [[0 for _ in range(3)] for _ in range(101)]
 C_ave  = [[0 for _ in range(3)] for _ in range(101)]
 H0_ave = [[0 for _ in range(3)] for _ in range(101)]
@@ -369,7 +347,7 @@ for i in range(101):
         H2_ave[i][j] = H2_sum[i][j] / float(len(files))
         H3_ave[i][j] = H3_sum[i][j] / float(len(files))
 #os.mkdir("pamfpad_ave/input/")
-with open(root_dir+"/pamfpad_ave/input/ave_xyz.dat", mode = "w") as f:
+with open(root_dir+"/input/ave_xyz.dat", mode = "w") as f:
     for i in range(101):
         f.write("{}\n".format(6))
         f.write("Step : {}\n".format(i * 10))

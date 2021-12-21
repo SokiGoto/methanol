@@ -133,7 +133,9 @@ sub process{my ($process_num) = @_;
 		system("paste $spec_cldir_path/result/direction-x.dat ".
 			"$spec_cldir_path/result/direction-y.dat ".
 			"$spec_cldir_path/result/direction-z.dat ".
-			"> $cd/plot-data/STEP$i.dat");
+			"> $spec_cldir_path/result/STEP$i.dat");
+		system("ln -fns ../STEP$i/spec/result/STEP$i.dat $cd/plot-data/STEP$i.dat");
+		system("rm -rf $spec_cldir_path/result/direction* $spec_cldir_path/result/rad*");
 		print STDERR "Finished $i in process $process_num\n";
 	}
         print STDERR "subprocess $process_num end\n";
