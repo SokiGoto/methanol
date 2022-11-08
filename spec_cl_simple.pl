@@ -3,144 +3,73 @@
 use strict;
 use Cwd 'getcwd';
 
-my $cd = getcwd;
+my $cd = "./";
+my $NAT;
 my $energy;
 my $ELUM;
 my $spec;
-my $multi = 1;
 
 my $specplot_path = "~/PROGRAM/MsSpec/spec_2019Mar/spec/res/treatment/specplot";
 
 &input_parameter;
-&option;
+
+if (not -d "../scfdat"){
+    print "error : wrong directory. Not find ../scfdat\n";
+    exit(1);
+};
 
 if (-d "plot-data") {system("rm -r plot-data")}mkdir("plot-data");
+if (-d "clus") {system("rm -r clus")}mkdir("clus");
+if (-d "res") {system("rm -r res")}mkdir("res");
+if (-d "data") {system("rm -r data")}mkdir("data");
+if (-d "div") {system("rm -r div")}mkdir("div");mkdir("div/wf");
+if (-d "rad") {system("rm -r rad")}mkdir("rad");
+if (-d "tl") {system("rm -r tl")}mkdir("tl");
+if (-d "result") {system("rm -r result")}mkdir("result");
+
+my $return = system("cp -rp ../scfdat/clus/clus.out ./clus/clus.out");
+if ($return != 0) {exit(1)};
+system("cp -rp ../scfdat/rad/radmat.out ./rad/radmat.out");
+system("cp -rp ../scfdat/tl/tmat.out ./tl/tmat.out");
 
 
-my $STEP = 0;
-while (1){
-	if (!-d "$cd/STEP$STEP/"){
-		last;
-	}
-	$STEP = $STEP + 1;
-}
+for (my $j = 1; $j <= 3; $j++) {
+	for (my $rad = 0; $rad <= 180; $rad++){
+		my $direction = &mk_spec_data("",$rad,$j);
+		#system("procspec_mi > $cd/tmp.txt");
+		#system("procspec_se > $cd/tmp.txt");
+		#print "$spec > ./tmp.txt\n";
+		system("$spec > ./tmp.txt");
+		open(ANSWER, ">", "treatment_answer.txt");
+	    print ANSWER "res/res.dat\n";
+	    print ANSWER "result/rad-".$direction."-".$rad.".dat\n";
+	    print ANSWER "-1\n";
+	    print ANSWER "N\n";
+	    print ANSWER "N\n";
+	    print ANSWER "N\n";
+	    print ANSWER "N\n";
+	    close(ANSWER);
+		#print "$specplot_path < treatment_answer.txt > ./tmp.txt\n";
+	    system("$specplot_path < treatment_answer.txt > ./tmp.txt");
+	    system("rm treatment_answer.txt");
 
-my $multi_STEP = int($STEP/$multi);
-my $multi_mod  = $STEP % $multi;
-
-my @multi_se_list;
-for (my $i = 0; $i < $multi; $i++){
-	my $diff = $multi_STEP;
-	if ($i < $multi_mod and $multi_mod != 0) {
-		if ($i == 0) {
-			push(@multi_se_list, [0, $diff + 1]);
-		} else {
-			push(@multi_se_list, [$multi_se_list[$i-1][1], $multi_se_list[$i-1][1] + $diff + 1]);
+		open(FH, "./result/rad-".$direction."-".$rad.".dat") or die $!;
+		my @array = <FH>;
+		close(FH);
+		open(OUT, ">>", "./result/direction-".$direction.".dat");
+		for (my $k = 0; $k < @array; $k++){
+			print OUT  " ".sprintf("%6.2f",$rad).$array[$k];
 		}
-	} else {
-		if ($i == 0) {
-            push(@multi_se_list, [0, $diff]);
-        } else {
-            push(@multi_se_list, [$multi_se_list[$i-1][1], $multi_se_list[$i-1][1] + $diff]);
-        }
+		print OUT "\n";
+        close (OUT);
+		print "$j, $rad\n";
 	}
 }
+system("paste ./result/direction-x.dat ".
+	"./result/direction-y.dat ".
+	"./result/direction-z.dat ".
+	"> data.dat");
 
-
-my @pids;
-for (my $i = 0; $i < $multi; $i++ ) {
-        my $pid = fork;
-        if (! defined $pid) {
-                die "fork failed\n";
-        } elsif (! $pid) {
-                process($i);
-                exit;
-        } else {
-                push @pids, $pid;
-        }
-}
-open(OUT, ">", "./pid.txt");
-for my $pid (@pids) {
-	print OUT "$pid\n";
-}
-close(OUT);
-for my $pid (@pids) {
-        waitpid($pid, 0);
-}
-system("rm $cd/tmp.txt");
-&write_parameter;
-print STDERR "finish\n";
-
-
-########################################################
-
-sub process{my ($process_num) = @_;
-	my $for_start = $multi_se_list[$process_num][0];
-	my $for_end   = $multi_se_list[$process_num][1];
-
-	my $print_end = $for_end-1;
-    print STDERR "subprocess $process_num start : $for_start ~ $print_end\n";
-	for (my $i = $for_start; $i < $for_end; $i++){
-		our $spec_cldir_path = "$cd/STEP$i/spec";
-		if (-d "$spec_cldir_path"){
-			system("rm -r $spec_cldir_path");
-		}
-		system ("mkdir $spec_cldir_path");
-		system ("mkdir $spec_cldir_path/clus");
-		system ("mkdir $spec_cldir_path/res");
-		system ("mkdir $spec_cldir_path/data");
-		system ("mkdir $spec_cldir_path/div");
-		system ("mkdir $spec_cldir_path/div/wf");
-		system ("mkdir $spec_cldir_path/plot");
-		system ("mkdir $spec_cldir_path/rad");
-		system ("mkdir $spec_cldir_path/tl");
-		system ("mkdir $spec_cldir_path/result");
-
-		system("cp -rp ./STEP$i/scfdat/clus/clus.out $spec_cldir_path/clus/clus.out");
-		system("cp -rp ./STEP$i/scfdat/rad/radmat.out $spec_cldir_path/rad/radmat.out");
-		system("cp -rp ./STEP$i/scfdat/tl/tmat.out $spec_cldir_path/tl/tmat.out");
-		
-		for (my $j = 1; $j <= 3; $j++) {
-			for (my $rad = 0; $rad <= 180; $rad++){
-				my $direction = &mk_spec_data($spec_cldir_path,$rad,$j);
-				chdir("$spec_cldir_path");
-				#system("procspec_mi > $cd/tmp.txt");
-				#system("procspec_se > $cd/tmp.txt");
-				system("$spec > $cd/tmp.txt");
-				open(ANSWER, ">", "treatment_answer.txt");
-			        print ANSWER "res/res.dat\n";
-			        print ANSWER "result/rad-".$direction."-".$rad.".dat\n";
-			        print ANSWER "-1\n";
-			        print ANSWER "N\n";
-			        print ANSWER "N\n";
-			        print ANSWER "N\n";
-			        print ANSWER "N\n";
-			        close(ANSWER);
-			        system("$specplot_path < treatment_answer.txt > $cd/tmp.txt");
-			        system("rm treatment_answer.txt");
-		
-				open(FH, "$spec_cldir_path/result/rad-".$direction."-".$rad.".dat") or die $!;
-				my @array = <FH>;
-				close(FH);
-				open(OUT, ">>", "$spec_cldir_path/result/direction-".$direction.".dat");
-				for (my $k = 0; $k < @array; $k++){
-					print OUT  " ".sprintf("%6.2f",$rad).$array[$k];
-				}
-				print OUT "\n";
-		                close (OUT);
-				chdir("$cd");
-			}
-		}
-		system("paste $spec_cldir_path/result/direction-x.dat ".
-			"$spec_cldir_path/result/direction-y.dat ".
-			"$spec_cldir_path/result/direction-z.dat ".
-			"> $spec_cldir_path/result/STEP$i.dat");
-		system("ln -fns ../STEP$i/spec/result/STEP$i.dat $cd/plot-data/STEP$i.dat");
-		system("rm -rf $spec_cldir_path/result/direction* $spec_cldir_path/result/rad*");
-		print STDERR "Finished $i in process $process_num\n";
-	}
-        print STDERR "subprocess $process_num end\n";
-}
 
 
 sub mk_spec_data { # arg (file name path, rad, direction)
@@ -165,14 +94,14 @@ sub mk_spec_data { # arg (file name path, rad, direction)
 	       $THLUM = 90.00;
 	       $PHILUM = 0.00;
         }
-	open(REWRITE, ">", "$_[0]/data/spec.dat") or die $!;
+	open(REWRITE, ">", "./data/spec.dat") or die $!;
 	print REWRITE "    ***************************************************************************\n";
 	print REWRITE "    *                X-RAY ABSORPTION CALCULATION OF MgO(001)                 *\n";
 	print REWRITE "    ***************************************************************************\n";
 	print REWRITE "    *=========================================================================*\n";
 	print REWRITE "    *                           CRYSTAL STRUCTURE :                           *\n";
 	print REWRITE "    *====+=========+=========+=========+=========+============================*\n";
-	print REWRITE "    *  CUB         P         0         6         CRIST,CENTR,IBAS,NAT         *\n";
+	print REWRITE "    *  CUB         P         0       ".sprintf("%3d", $NAT)."         CRIST,CENTR,IBAS,NAT         *\n";
 	print REWRITE "    *    4.2100    1.000     1.000   ATU         A,BSURA,CSURA,UNIT           *\n";
 	print REWRITE "    *   90.00     90.00     90.00                ALPHAD,BETAD,GAMMAD          *\n";
 	print REWRITE "    *    0         0         0         1         H,K,I,L                      *\n";
@@ -245,12 +174,9 @@ sub mk_spec_data { # arg (file name path, rad, direction)
 	print REWRITE "    *    1         1         0         0         NEMET,IEMET(NEMET)           *\n";
 	print REWRITE "    *    0         1       100         0.00      ISOM,NONVOL,NPATH,VINT       *\n";
 	print REWRITE "    *    0         1         0         0         IFWD,NTHREWRITE,I_NO,I_RA    *\n";
-	print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
-	print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
-	print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
-	print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
-	print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
-	print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
+	for (my $k = 0; $k < $NAT; $k++) {
+		print REWRITE "    * .. 1        20.00      0        20.00      N_RA,THFWD,IBWD,THBWD(NAT)   *\n";
+	}
 	print REWRITE "    *    0         2         0.0100    2         IPW,NCUT,PCTINT,IPP          *\n";
 	print REWRITE "    *    0         2.10    LPU                   ILENGTH,RLENGTH,UNLENGTH     *\n";
 	print REWRITE "    *    0         1         0         2         IDWSPH,ISPEED,IATT,IPRINT    *\n";
@@ -296,7 +222,7 @@ sub mk_spec_data { # arg (file name path, rad, direction)
 }
 
 sub input_parameter {
-        open(IN, "<", "input_methanol.txt");
+        open(IN, "<", "input_spec.txt");
         while(my $line = <IN>){
                 chomp($line);
                 $line =~ s/ |\t//g;
@@ -312,44 +238,9 @@ sub input_parameter {
                         $line =~ /elum="(.*)"/;
                         $ELUM = $1;
                 }
-        }
-}
-
-sub option{
-	if (my ($result) = grep { $ARGV[$_] eq '-help' } 0 .. $#ARGV) {
-                print "movie.pl program make atom and spectra movie.\n";
-                print "--------------------------------------------------------------------------\n";
-                print "options\n";
-                print "  -np             |multi num\n";
-                print "  -version, -v    |display version information\n";
-                print "  -help           |show help\n";
-                exit(0);
-        }
-
-	if (my ($result) = grep { $ARGV[$_] eq '-version' || $ARGV[$_] eq '-v' } 0 .. $#ARGV) {
-                print "movie.pl 1.0.0\n";
-                exit(0);
-        }
-
-        
-	if (my ($result) = grep { $ARGV[$_] eq '-np' } 0 .. $#ARGV) {
-                if ($ARGV[$result + 1]) {
-                        $multi = int($ARGV[$result + 1]);
-			if ($multi < 1){
-				print "multi >= 1\n";
-				exit(1);
-			}
-                        splice(@ARGV, $result, 2);
-                } else {
-                        print "Please enter mode.\n";
-                        exit(1);
+                if ($line =~ /^nat/){
+                        $line =~ /nat="(.*)"/;
+                        $NAT = $1;
                 }
         }
-}
-sub write_parameter{
-    open(LOG, ">", "cal_para_spec.txt");
-    print LOG "energy         : $energy\n";
-    print LOG "elum           : $ELUM\n";
-    print LOG "spec           : $spec\n";
-    close(LOG);
 }

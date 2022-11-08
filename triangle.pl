@@ -52,6 +52,8 @@ my @yrange = (-2, 2);
 &option();
 &input_parameter();
 
+print "CH peak $CH_peak_theta, OH peak $OH_peak_theta\n";
+
 
 my $yrange_max = 7;
 my $scale_C;
@@ -528,7 +530,7 @@ for(my $i = 0; $i < $STEP; $i++){
 	open(OUT_DIFF, ">", "C_test/STEP$i\_diff.dat") or die $!;
 	for(my $j = 0; $j <= 180; $j++){
 		my $diff = $data[$i][$j][3] - $data[$i][360 - $j][3];
-		print OUT_DIFF sprintf("%6.2f", $data[$i][$j][1]).
+		print OUT_DIFF sprintf("%-6.2f", $data[$i][$j][1]).
 		         "  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $diff)."\n"
 		#my ($diff_x, $diff_y, $diff_z) = spherical_to_cartesian($diff,
                 #                        deg2rad($peak_C[$i][$j][2]), deg2rad($peak_C[$i][$j][1]));
@@ -562,7 +564,7 @@ for (my $i = 0; $i < $STEP; $i++){
 
 
     for (my $j = 0; $j <= 2 * 180; $j++){
-    	print OUT_C sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%10.8f", $data[$i][$j][3])."\n";
+    	print OUT_C sprintf("%-6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%10.8f", $data[$i][$j][3])."\n";
 		#print "".($j%(2*180)-1)."  ".($j)%(2*180)."  ".($j + 1)%(2*180)." \n";
 		#print "STEP $i  theta $j \n";
 		#print "$data[$i][$j-1][3]    $data[$i][$j][3]   $data[$i][($j + 1)%(2*180)][3] \n";
@@ -570,7 +572,8 @@ for (my $i = 0; $i < $STEP; $i++){
 			$peak_C[$i][$j][1] = $data[$i][$j][1];
             $peak_C[$i][$j][2] = $data[$i][$j][2];
             $peak_C[$i][$j][3] = $data[$i][$j][3];
-            print OUT_PEAK sprintf("%6.2f", $peak_C[$i][$j][1])."  ".sprintf("%6.2f", $peak_C[$i][$j][2])."  ".sprintf("%9.6f", $peak_C[$i][$j][3])."\n";
+            print OUT_PEAK sprintf("%-6.2f", $peak_C[$i][$j][1])."  ".sprintf("%6.2f", $peak_C[$i][$j][2])."  ".sprintf("%9.6f", $peak_C[$i][$j][3])."\n";
+			#print sprintf("%-6.2f", $peak_C[$i][$j][1])."  ".sprintf("%6.2f", $peak_C[$i][$j][2])."  ".sprintf("%9.6f", $peak_C[$i][$j][3])."\n";
 
 
 			### make .plt ###
@@ -579,7 +582,7 @@ for (my $i = 0; $i < $STEP; $i++){
 			### end .plt #####
         }
 		if ($data[$i][$j-1][3] > $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] > $data[$i][$j][3]){
-			print OUT_VALLEY sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
+			print OUT_VALLEY sprintf("%-6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
         }
 
 	}
@@ -673,7 +676,7 @@ for(my $i = 0; $i < $STEP; $i++){
 	open(OUT_DIFF, ">", "O_test/STEP$i\_diff.dat") or die $!;
 	for(my $j = 0; $j < 180; $j++){
 		my $diff = $data[$i][$j][3] - $data[$i][360 - $j][3];
-		print OUT_DIFF sprintf("%6.2f", $data[$i][$j][1]).
+		print OUT_DIFF sprintf("%-6.2f", $data[$i][$j][1]).
 			"  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $diff)."\n";
 		#my ($diff_x, $diff_y, $diff_z) = spherical_to_cartesian($diff,
 		#                        deg2rad($peak_C[$i][$j][2]), deg2rad($peak_C[$i][$j][1]));
@@ -683,7 +686,7 @@ for(my $i = 0; $i < $STEP; $i++){
 }
 
 for (my $i = 0; $i < $STEP; $i++){
-        open(OUT_C, ">", "O_test/STEP$i.dat") or die $!;
+        open(OUT_O, ">", "O_test/STEP$i.dat") or die $!;
         open(OUT_PEAK, ">", "O_test/STEP$i\_PEAK.dat") or die $!;
 	open(OUT_VALLEY, ">", "O_test/STEP$i\_VALLEY.dat") or die $!;
 
@@ -704,13 +707,13 @@ for (my $i = 0; $i < $STEP; $i++){
 
 
         for (my $j = 0; $j <= 2 * 180; $j++){
-                print OUT_C sprintf("%6.2f", $data[$i][$j][1]).
+                print OUT_O sprintf("%-6.2f", $data[$i][$j][1]).
 			"  ".sprintf("%6.2f", $data[$i][$j][2])."  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
                 if ($data[$i][$j-1][3] < $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] < $data[$i][$j][3]){
                         $peak_O[$i][$j][1] = $data[$i][$j][1];
                         $peak_O[$i][$j][2] = $data[$i][$j][2];
                         $peak_O[$i][$j][3] = $data[$i][$j][3];
-                        print OUT_PEAK sprintf("%6.2f", $peak_O[$i][$j][1])."  ".
+                        print OUT_PEAK sprintf("%-6.2f", $peak_O[$i][$j][1])."  ".
 				sprintf("%6.2f", $peak_O[$i][$j][2])."  ".sprintf("%9.6f", $peak_O[$i][$j][3])."\n";
 
 
@@ -721,7 +724,7 @@ for (my $i = 0; $i < $STEP; $i++){
 			### end .plt #####
                 }
 		if ($data[$i][$j-1][3] > $data[$i][$j][3] && $data[$i][($j + 1)%(2*180)][3] > $data[$i][$j][3]){
-                        print OUT_VALLEY sprintf("%6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2]).
+                        print OUT_VALLEY sprintf("%-6.2f", $data[$i][$j][1])."  ".sprintf("%6.2f", $data[$i][$j][2]).
 				"  ".sprintf("%9.6f", $data[$i][$j][3])."\n";
 		}
 
@@ -735,7 +738,7 @@ for (my $i = 0; $i < $STEP; $i++){
 	
 	#print "STEP = $i\n";
 	#print "scalar".scalar(@{$peak[$i]})."\n";
-        close(OUT_C);
+        close(OUT_O);
         close(OUT_PEAK);
 	close(PLT);
 
@@ -1029,8 +1032,8 @@ sub brode_triangle {
 	}
 	
 	for(my $i = 0; $i < $STEP; $i++){
-	        my ($x_C, $y_C, $z_C);
-	        my ($x_O, $y_O, $z_O);
+		my ($x_C, $y_C, $z_C);
+		my ($x_O, $y_O, $z_O);
 		my $CH_peak_r = 0;
 		my $OH_peak_r = 0;
 	
@@ -1039,12 +1042,15 @@ sub brode_triangle {
 		my $theta_C;
 		my $theta_keep_C;
 		for (my $j = 1; $j <= $peak_C_jlen; $j++){
-			$theta_C = $peak_C[$i][$j][1];
 			if ($peak_C[$i][$j][2] == 180){
-	                        $theta_C = -$peak_C[$i][$j][1];
-	                }
+				$theta_C = -1.0 * $peak_C[$i][$j][1];
+			} else {
+				$theta_C = $peak_C[$i][$j][1];
+			}
+			#print "$j $theta_C $peak_C[$i][$j][1]\n";
 			#if ($theta_C > $CH_peak_theta - $peak_wide and $theta_C < $CH_peak_theta + $peak_wide){
 			if ($theta_C > $CH_peak_theta - $peak_wide_C and $theta_C < $CH_peak_theta + $peak_wide_C){
+				#print "$CH_peak_r $peak_C[$i][$j][3]\n";
 				if ($peak_C[$i][$j][3] > $CH_peak_r){
 					$theta_keep_C = $theta_C;
 					$CH_peak_r = $peak_C[$i][$j][3];
@@ -1063,23 +1069,25 @@ sub brode_triangle {
 	
 	
 		my $peak_O_jlen = scalar(@{$peak_O[$i]});
-	        my $theta_O;
+		my $theta_O;
 		my $theta_keep_O;
-	        for (my $j = 1; $j <= $peak_O_jlen; $j++){
-	                $theta_O = $peak_O[$i][$j][1];
-	                if ($peak_O[$i][$j][2] == 180){
-	                        $theta_O = -$peak_O[$i][$j][1];
-	                }
+		for (my $j = 1; $j <= $peak_O_jlen; $j++){
+			if ($peak_O[$i][$j][2] == 180){
+				$theta_O = -$peak_O[$i][$j][1];
+			} else {
+				$theta_O = $peak_O[$i][$j][1];
+			}
 			#if ($theta_O > $OH_peak_theta - $peak_wide and $theta_O < $OH_peak_theta + $peak_wide){
 			if ($theta_O > $OH_peak_theta - $peak_wide_O and $theta_O < $OH_peak_theta + $peak_wide_O){
-	                        if ($peak_O[$i][$j][3] > $OH_peak_r){
-	                                $theta_keep_O = $theta_O;
-	                                $OH_peak_r = $peak_O[$i][$j][3];
-	                                ($x_O, $y_O, $z_O) = spherical_to_cartesian(1,
-	                                        deg2rad($peak_O[$i][$j][2]), deg2rad($peak_O[$i][$j][1]));
-	                        }
-	                }
-	        }
+				#print "##### $OH_peak_r $peak_O[$i][$j][3]\n";
+				if ($peak_O[$i][$j][3] > $OH_peak_r){
+					$theta_keep_O = $theta_O;
+					$OH_peak_r = $peak_O[$i][$j][3];
+					($x_O, $y_O, $z_O) = spherical_to_cartesian(1,
+						deg2rad($peak_O[$i][$j][2]), deg2rad($peak_O[$i][$j][1]));
+				}
+			}
+		}
 		if ($theta_keep_O == ""){
 			print "not found STEP $i O peak\n";
 			exit;
@@ -1210,14 +1218,7 @@ sub brode_triangle {
 	    print POINT "replot file_O u ".
 			"((\$3/$scale_O) * sin((\$1/180) * pi) * cos(\$2/180*pi)):".
 			"((\$3/$scale_O) * cos((\$1/180) * pi)) w l lc \"red\"\n";
-		if ($average == 1) {
-			print POINT "set cbrange[0:RowCount]\n";
-			print POINT "set palette rgb 33,13,10\n";
-			print POINT "unset colorbox\n";
-			print POINT "\n";
-			print POINT "replot \$Data u 1:2:3 w p ps 0.2 pt 7 lc palette z notitle\n";
-		};
-
+		
 		if ($CH_peak_theta - $OH_peak_theta <= 0){
 			print POINT "set arrow 1 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
                         	" to ".sprintf("%9.6f", $x_O).", ".sprintf("%9.6f", $z_O).
@@ -1227,7 +1228,7 @@ sub brode_triangle {
 				sprintf("%9.6f", $save_C[$i][2])." to ".sprintf("%9.6f", $x_C).", ".
 				sprintf("%9.6f", $z_C)." nohead linestyle 2 lc \"purple\"\n";
 
-	    	print POINT "set arrow 2 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
+	    	print POINT "set arrow 3 from ".sprintf("%9.6f", 0).", ".sprintf("%9.6f", 0).
 				" to ".sprintf("%9.6f", $save_C[$i][0]).", ".sprintf("%9.6f", $save_C[$i][2]).
 				" nohead linestyle 2 lc \"purple\"\n";
 		} else {
@@ -1248,6 +1249,17 @@ sub brode_triangle {
 	        print POINT "replot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $intersection_x).
 				", ".sprintf("%9.6f", $intersection_y).") lc 'purple' pt 7 title \"spectra\"\n";
 		}
+	
+
+
+		if ($average == 1) {
+			print POINT "set cbrange[0:RowCount]\n";
+			print POINT "set palette rgb 33,13,10\n";
+			print POINT "unset colorbox\n";
+			print POINT "\n";
+			print POINT "replot \$Data u 1:2:3 w p ps 0.2 pt 7 lc palette z notitle\n";
+		};
+
 		
 			#print POINT "plot sprintf(\"< echo ''%f %f''\", ".sprintf("%9.6f", $x_O).
 			#	", ".sprintf("%9.6f", $z_O).") pt 7\n";

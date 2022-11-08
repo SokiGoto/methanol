@@ -57,7 +57,7 @@ for directory in directorys:
     #os.chdir(directory)
     #cmd = "pwd"
     #subprocess.run(cmd, shell = True)
-    fi = "../" + directory + "/input/coordinate_rotation3_G.XYZ"
+    fi = directory + "/input/coordinate_rotation3_G.XYZ"
     #cmd = "cp -rp " + fi + " ."
     #subprocess.run(cmd, shell = True)
     print(fi)
