@@ -1,29 +1,18 @@
-#!/usr/bin/perl
-use strict;
-use List::Util "max", "min";
-my $input_file;
-my $energy;
-my $scale;
-my $STEP;
-my $average = 0;
-my $atom_movie = 0;
-my $total_line = 8;
-my $xmax;
-my $xmin;
-my $ymax;
-my $ymin;
-my $zmax;
-my $zmin;
-my $rmax;
-# my $gnuplot = "gnuplot";
-# my $gnuplot = "/opt/gnuplot/5.4.2/bin/gnuplot";
-# my $gnuplot = "/opt/gnuplot/4.6.1/bin/gnuplot";
-my $gnuplot = "/opt/gnuplot/5.0.5/bin/gnuplot";
+#!/usr/bin/python3
+import os
+import subprocess
 
-if(-d "2d-plot-data"){system("rm -r 2d-plot-data")};mkdir("2d-plot-data");
-if(-d "2d-pdf"){system("rm -r 2d-pdf")};mkdir("2d-pdf");
-if(-d "2d-png"){system("rm -r 2d-png")};mkdir("2d-png");
-if(-d "2d-output"){system("rm -r 2d-output")};mkdir("2d-output");
+average = 0;
+total_line = 8;
+#gnuplot = "gnuplot";
+#gnuplot = "/opt/gnuplot/5.4.2/bin/gnuplot";
+#gnuplot = "/opt/gnuplot/4.6.1/bin/gnuplot";
+gnuplot = "/opt/gnuplot/5.0.5/bin/gnuplot";
+
+if(os.path.isfile("2d-plot-data")){subprocess.run("rm -r 2d-plot-data", shell=True)};os.mkdir("2d-plot-data");
+if(os.path.isfile("2d-pdf")){subprocess.run("rm -r 2d-pdf", shell=True)};os.mkdir("2d-pdf");
+if(os.path.isfile("2d-png")){subprocess.run("rm -r 2d-png", Shell=True)};os.mkdir("2d-png");
+if(os.path.isfile("2d-output")){subprocess.run("rm -r 2d-output", shell=True)};os.mkdir("2d-output");
 
 &option;
 &input_parameter;
@@ -39,7 +28,7 @@ if ($energy == 2500){
 #my $STEP = $lines_len/$total_line;
 my $print_STEP = $STEP-1;
 
-if ($average == 2){
+if ($average == 0){
 	open(IN_RANGE, "<", "plot_atom/output-000.plt")or die $!;
 	while(my $line = <IN_RANGE>){
 	        chomp($line);
@@ -69,15 +58,11 @@ for(my $i = 0; $i < $STEP; $i++){
 	open(OUT, ">", "2d-plot-data/STEP$i.dat");
 	for(my $j = 0; $j <= 180; $j++){
 		print OUT $lines[$j*362];
-		my @tmp = split(/\s+/, $lines[$j*362]);
-		my $rr;
-		if ($average == 1){
-			$rr = $tmp[2];
-		} else {
-			$rr = $tmp[3] + $tmp[6] + $tmp[9];
-		}
-		if ($rmax < $rr) {
-			$rmax = $rr
+		if ($average == 1) {
+			my @tmp = split(/\s+/, $lines[$j*362]);
+			if ($rmax < $tmp[2]) {
+				$rmax = $tmp[2]
+			}
 		}
 		#print $lines[$j*362];
 		#print OUT $lines[180 + $j*362]."\n";
@@ -85,23 +70,17 @@ for(my $i = 0; $i < $STEP; $i++){
 	print OUT "\n";
 	for(my $j = 0; $j <= 180; $j++){
 		print OUT $lines[180 + $j*362];
-		my @tmp = split(/\s+/, $lines[180 + $j*362]);
-		my $rr;
 		if ($average == 1) {
-			$rr = $tmp[2];
-        } else {
-            $rr = $tmp[3] + $tmp[6] + $tmp[9];
-        }
-		if ($rmax < $rr) {
-			$rmax = $rr
+			my @tmp = split(/\s+/, $lines[180 + $j*362]);
+			if ($rmax < $tmp[2]) {
+				$rmax = $tmp[2]
+			}
 		}
-		
 	}
 	close(IN);
 	close(OUT);
 }
 
-print "plot-data/STEP".($STEP-1).".dat\n";
 open(IN, "<", "plot-data/STEP".($STEP-1).".dat")or die $!;
 my @lines = <IN>;
 my $radii = 0;
@@ -110,11 +89,7 @@ my $count = 0;
 for (my $i = 0; $i < @lines; $i++){
 	if (!$lines[$i] =~ /^\s*$/) {
 		my @tmp = split(/\s+/, $lines[$i]);
-		if ($average == 1){
-			$radii += $tmp[2];
-		} else {
-			$radii += $tmp[3] + $tmp[6] + $tmp[9];
-		}
+		$radii += $tmp[2];
 		$count++;
 	}
 }
@@ -133,12 +108,6 @@ for(my $i = 0; $i < $STEP; $i++){
 	#print GNU_OUT "set multiplot\n";
 	#print GNU_OUT "load \"plot_atom/output-".sprintf("%03s",$i).".plt\"\n";
 	#print GNU_OUT "reset\n";
-	if ($atom_movie == 1) {
-		print GNU_OUT "set multiplot\n";
-		print GNU_OUT "set origin 0.07, -0.05\n";
-	} else {
-		print GNU_OUT "set title \"step : ".($i*10)."\"\n";
-	}
 	print GNU_OUT "file = \"2d-plot-data/STEP$i.dat\"\n";
 	print GNU_OUT "set polar\n";
 	#print GNU_OUT "set origin 0, 0.045\n";
@@ -148,16 +117,16 @@ for(my $i = 0; $i < $STEP; $i++){
 	#print GNU_OUT "unset title\n";
 	#print GNU_OUT "set rrange[0:0.004]\n"; #2500eV
 	#print GNU_OUT "set rrange[0:0.2]\n"; #100eV
+	print GNU_OUT "set title \"step : ".($i*10)."\"\n";
 	#print GNU_OUT "set origin 0.005, -0.005\n"; #ROT1,2
 	#print GNU_OUT "set origin 0.005, 0\n"; #NON-ROT
 	if ($average == 0) {
-		#print GNU_OUT "se xr[$xmin:$xmax]"."\n";
-		#print GNU_OUT "se yr[$ymin:$ymax]"."\n";
-		#print GNU_OUT "se zr[$zmin:$zmax]"."\n";
-		#print GNU_OUT "se rr[0:".max($xmax,$ymax,$zmax)."]"."\n";
-		print GNU_OUT "set rr[0:0.333]"."\n";
+		print GNU_OUT "se xr[$xmin:$xmax]"."\n";
+		print GNU_OUT "se yr[$ymin:$ymax]"."\n";
+		print GNU_OUT "se zr[$zmin:$zmax]"."\n";
+		print GNU_OUT "se rr[0:".max($xmax,$ymax,$zmax)."]"."\n";
 	} elsif ($average == 1) {
-		print GNU_OUT "set rr[0:1]"."\n";
+		print GNU_OUT "se rr[0:1]"."\n";
 	}
 	print GNU_OUT "\n";
 	print GNU_OUT "unset key\n";
@@ -179,18 +148,14 @@ for(my $i = 0; $i < $STEP; $i++){
 	
 	#print GNU_OUT "scale = $scale\n";
 	print GNU_OUT "set size square\n";
-	print GNU_OUT "set style fill transparent solid 0.25 noborder\n";
 	#print GNU_OUT "set view equal xyz\n";
 	#print GNU_OUT "set view 90, 0, 1, 1\n";
 	#print GNU_OUT "splot file u (scale*(\$3+\$6+\$9)/3.0)*sin(\$1)*cos(\$2):(0*scale*(\$3+\$6+\$9)/3.0)*sin(\$1)*sin(\$2):(scale*(\$3+\$6+\$9)/3.0)*cos(\$1) w l\n";
-
 	if ($average == 0) {
-		print GNU_OUT "plot file u (\$2!=180 ? -\$1+90 : \$1+90):((\$3+\$6+\$9)/(3.0*$rmax)) w line lc \"black\"\n";
-		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):((\$3+\$6+\$9)/(3.0*$rmax)) w filledc below r=".sprintf("%.6f",$radii/(3.0*$rmax))." lc \"blue\" notitle\n";
-		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):((\$3+\$6+\$9)/(3.0*$rmax)) w filledc above r=".sprintf("%.6f",$radii/(3.0*$rmax))." lc \"red\" notitle\n";
+		print GNU_OUT "plot file u (\$2!=180 ? -\$1+90 : \$1+90):(scale*(\$3+\$6+\$9)/3.0) w l\n";
 	} elsif ($average == 1) {
 		print GNU_OUT "plot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w line lc \"black\"\n";
-		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc below r=".sprintf("%.6f",$radii/$rmax)." lc \"dark-turquoise\" notitle\n";
+		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc below r=".sprintf("%.6f",$radii/$rmax)." lc \"blue\" notitle\n";
 		print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc above r=".sprintf("%.6f",$radii/$rmax)." lc \"red\" notitle\n";
 		#print GNU_OUT "replot file u (\$2!=180 ? -\$1+90 : \$1+90):(\$3/$rmax) w filledc closed lc \"red\" notitle\n";
 
@@ -199,25 +164,21 @@ for(my $i = 0; $i < $STEP; $i++){
 		#print GNU_OUT "plot file u (\$3/$rmax * cos(\$2!=180 ? -\$1+90 : \$1+90)):(\$3/$rmax * sin(\$2!=180 ? -\$1+90 : \$1+90)) w filledc above x=\$3/$rmax y=\$3/$rmax lc \"blue\"\n";
 		#print GNU_OUT "plot file u (\$3/$rmax * cos(\$2!=180 ? -\$1+90 : \$1+90)):(\$3/$rmax * sin(\$2!=180 ? -\$1+90 : \$1+90)) w filledc above x=\$3/$rmax y=\$3/$rmax lc \"red\"\n";
 	}
-	if ($atom_movie == 1) {
-		print GNU_OUT "reset\n";
-		print GNU_OUT "call \"../input/plot_atom/output-".(sprintf("%03d", $i)).".plt\"\n";
-	}
 
 	#print GNU_OUT "(scale*(\$3+\$6+\$9)/3.0)*cos(\$1): \\ \n";
 	#print GNU_OUT "scale*(\$3+\$6+\$9)/3.0 w pm3d \n";
 	close(GNU_OUT);
-	system("$gnuplot mk_2d-pdf.plt");
-	my $command_PDFtoPNG = "convert -density 300 -flatten ./2d-pdf/STEP$i.pdf ./2d-png/output-".
+	subprocess.run("$gnuplot mk_2d-pdf.plt");
+	my $command_PDFtoPNG = "convert -density 300 -flatten ./2d-pdf/STEP$i.pdf ./2d-png/STEP-".
 		sprintf("%03d",$i).".png";
-	system($command_PDFtoPNG);
+	subprocess.run($command_PDFtoPNG);
 	print "end $i/$print_STEP\n";
 }
 
-system("magick -delay 50 ./2d-png/output-*.png ./2d-output/output.gif");
+subprocess.run("magick -delay 50 ./2d-png/STEP-*.png ./2d-output/output.gif");
 my $command_GIFtoMP4 = "ffmpeg -r 2 -i ./2d-output/output.gif  -movflags faststart -pix_fmt yuv420p -vf ".
                                 "\"scale=trunc(iw/2)*2:trunc(ih/2)*2\" ./2d-output/output.mp4";
-system($command_GIFtoMP4);
+subprocess.run($command_GIFtoMP4);
 
 sub input_parameter {
 	open(IN, "<", "input_methanol.txt");
@@ -245,7 +206,6 @@ sub option{
                 print "--------------------------------------------------------------------------\n";
                 print "options\n";
                 print "  -ave            |not plot atom triangle\n";
-                print "  -atom           |set atom\n";
                 print "  -help           |show help\n";
                 exit(0);
         }
@@ -253,11 +213,6 @@ sub option{
     if (my ($result) = grep { $ARGV[$_] eq '-ave' } 0 .. $#ARGV) {
         $average = 1;
             splice(@ARGV, $result, 1);
-    }
-    
-	if (my ($result) = grep { $ARGV[$_] eq '-atom' } 0 .. $#ARGV) {
-		$atom_movie = 1;
-		splice(@ARGV, $result, 1);
     }
 
         if (@ARGV == 1){

@@ -14,14 +14,15 @@ my $total_line = $Number_of_atoms + $extra_line;
 my $cheaker = 0;
 my $print;
 my $flag = 0;
+my $phagen;
 
-
-#my $rO = 0.566892;
-#my $rH = 0.451732;
-#my $rC = 0.598745;
-my $rO = 0.403114;
-my $rH = 0.491432;
-my $rC = 0.628338;
+my %atom_radii;
+# my $rO = 0.566892;
+# my $rH{"H"} = 0.451732;
+# my $rC = 0.598745;
+#my $rO = 0.403114;
+#my $atom_radii{"H"} = 0.491432;
+#my $rC = 0.628338;
 
 my $energy;
 my $lmax_mode;
@@ -31,6 +32,13 @@ my $sort_atom;
 
 &option;
 &input_parameter;
+if (!%atom_radii){
+    print "error: atom rad empty !!!!!!!!!!!!!!!!!!\n";
+    exit(1);
+}
+
+
+
 my $cd = getcwd;
 
 my $log_file = 'log.out';
@@ -79,6 +87,7 @@ for (my $i = 0; $i < $lines_len/$total_line; $i++){
 	print OUT "gamma=0.01,\n";
 	print OUT "charelx='ex',\n";
 	print OUT "ionzst='neutral'\n";
+	print OUT "version='1.1'\n";
 	print OUT "&end\n";
 	print OUT "\n";
 	print OUT "\n";
@@ -117,13 +126,15 @@ for (my $i = 0; $i < $lines_len/$total_line; $i++){
 	chdir("$cd/STEP$i/scfdat/");
 	print "finished $i/".($STEP-1)."\n";
 	#system("pwd");
-	system("procfase3_nosym >> $cd/$log_file");
+    # system("$phagen >> $cd/$log_file");
+	system("$phagen");
 	chdir("$cd");
 }
 close(IN);
 if ($log_01 == 0){
 	system("rm -r $log_file");
 }
+&write_parameter;
 #system("./spec_cl.pl $lines_len $Number_of_atoms $extra_line");
 
 
@@ -155,6 +166,14 @@ sub input_parameter {
 			$line =~ /absorbing_atom="(.*)".*/;
 			$sort_atom = $1;
 		}
+		if ($line =~ /^atom_radii/){
+			$line =~ /atom_radii=\["(.*)","(.*)"\].*/;
+			$atom_radii{$1} = $2;
+		}
+		if ($line =~ /^phagen/){
+			$line =~ /phagen="(.*)".*/;
+			$phagen = $1;
+		}
 	}
 }
 
@@ -166,15 +185,15 @@ sub print_out{
 	if ($_[0] eq 'H'){
 		$atomic_number = 1;
 		#$number = 0.451732;
-		$atomic_radius = $rH;
+		$atomic_radius = $atom_radii{"H"};
 	} elsif ($_[0] eq 'C'){
                 $atomic_number = 6;
 		#$number = 0.598745;
-                $atomic_radius = $rC;
+                $atomic_radius = $atom_radii{"C"};
 	} elsif ($_[0] eq 'O'){
                 $atomic_number = 8;
 		#$number = 0.566892;
-                $atomic_radius = $rO;
+                $atomic_radius = $atom_radii{"O"};
 	}
 	$print = "\t $out[0]  $atomic_number  $out[1]  $atomic_radius\n";
 }
@@ -228,4 +247,18 @@ sub option{
                 print "Please chack option.\n";
                 exit(1);
         }
+}
+
+sub write_parameter{
+    open(LOG, ">", "cal_para_phagen.txt");
+    print LOG "structure_file : $input_file\n";
+    print LOG "energy         : $energy\n";
+    print LOG "lmax           : $lmax\n";
+    print LOG "lmax_mode      : $lmax_mode\n";
+    print LOG "absorbing_atom : $sort_atom\n";
+    while (my ($key, $value) = each(%atom_radii)){
+        print LOG "atom radii     : $key  $value\n";
+    }
+    print LOG "phagen         : $phagen\n";
+    close(LOG);
 }
